@@ -1,0 +1,32 @@
+{
+  "version": 3,
+  "skills": {
+    "humanizer": {
+      "source": "blader/humanizer",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/blader/humanizer.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "9862685f575c65a8247f90369951df1b3416e3d6",
+      "pluginName": "humanizer",
+      "installedAt": "2026-09-14T12:13:41.984Z",
+      "updatedAt": "2026-09-14T12:13:41.984Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "cline",
+    "codex",
+    "cursor",
+    "droid",
+    "gemini-cli",
+    "github-copilot",
+    "kilo",
+    "kimi-code-cli",
+    "opencode",
+    "warp",
+    "zed"
+  ]
+}
