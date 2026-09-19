@@ -5,40 +5,47 @@
 ## 1. Metadata
 
 - **Overall Status**: [Pending / In Progress / Reviewing / Completed]
-- **Lead / Reviewer**: Antigravity Agent
+- **Lead / Reviewer**: [Tech Lead / Reviewer Agent]
 - **Created Date**: [YYYY-MM-DD]
-- **Master Plan / RFC**: `local/agents/brainstorming/plans/YYYY-MM-DD-<feature-name>.md`
 
 ---
 
 ## 2. Task Delegation Matrix
 
-| Task ID | Domain / Scope | Assigned Agent | Task Spec File | Status | Walkthrough Artifact | Review Status |
+| Task ID | Track / Scope | Assigned Agent | Track Plan (Task Spec) | Status | Walkthrough Artifact | Review Status |
 | :---: | :--- | :---: | :--- | :---: | :--- | :---: |
-| **TASK-01** | Backend (API, DAO, Service) | OpenCode Agent | `task_spec_be.md` | `DONE` | `be_walkthrough.md` | `APPROVED` |
-| **TASK-02** | Frontend (Types, UI, Client) | OpenCode Agent | `task_spec_fe.md` | `DONE` | `fe_walkthrough.md` | `APPROVED` |
-| **TASK-03** | Documentation & Changelog | OpenCode Agent | `task_spec_docs.md` | `DONE` | `docs_walkthrough.md` | `APPROVED` |
+| **TASK-01** | Backend (API, DAO, Service) | OpenCode Agent | `task_spec_be.md` | `PENDING` | `be_walkthrough.md` | `PENDING` |
+| **TASK-02** | Frontend (Types, UI, Client) | OpenCode Agent | `task_spec_fe.md` | `PENDING` | `fe_walkthrough.md` | `PENDING` |
+| **TASK-03** | Documentation & Changelog | OpenCode Agent | `task_spec_docs.md` | `PENDING` | `docs_walkthrough.md` | `PENDING` |
 
 ---
 
 ## 3. Status Legend
 
-- `PENDING`: Newly created/decomposed task, execution has not started.
-- `IN_PROGRESS`: Assigned agent is actively implementing code and tests.
-- `REVIEWING`: Agent has generated a walkthrough, awaiting Lead / Antigravity Agent review.
-- `REVISE`: Lead agent detected errors, gaps, or failed criteria; revisions requested.
-- `APPROVED`: Lead agent validated git diff, verified logs, and approved changes.
-- `DONE`: Code changes approved and verified.
+**Status** (execution progress):
+- `PENDING`: Task created, execution not started.
+- `IN_PROGRESS`: Assigned agent is implementing code and tests.
+- `REVIEWING`: Walkthrough generated, awaiting Lead review.
+- `REVISE`: Lead found errors or gaps; revisions requested.
+- `DONE`: Changes approved and verified.
+
+**Review Status** (reviewer verdict):
+- `PENDING`: Not yet reviewed.
+- `REVISE`: Issues found; agent must fix and re-submit.
+- `APPROVED`: Lead validated `git diff`, re-ran verification, and approved. Set task Status to `DONE`.
 
 ---
 
 ## 4. Review & Quality Gate Log
 
 ### Review Log: [TASK-01]
-- **Review Date**: ...
-- **Reviewer**: Antigravity
+- **Review Date**: [YYYY-MM-DD]
+- **Reviewer**: [Name]
 - **Verdict**: [APPROVED / REVISE]
-- **Notes / Feedback**: ...
+- **Notes / Feedback**: [...]
 
 ### Review Log: [TASK-02]
-...
+- **Review Date**: [YYYY-MM-DD]
+- **Reviewer**: [Name]
+- **Verdict**: [APPROVED / REVISE]
+- **Notes / Feedback**: [...]
