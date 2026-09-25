@@ -1,15 +1,9 @@
 ---
 name: mermaid
-description: Help users create clear, accessible, and correct Mermaid diagrams embedded in markdown documents.
+description: Create, render, and validate Mermaid markdown diagrams. Use this skill when the user asks to visualize architecture, illustrate workflows, create flowcharts or ERDs, or debug and format existing Mermaid blocks.
 ---
 
 # Mermaid
-
-## Mission
-
-Generate syntax-valid, theme-adaptive, accessible Mermaid diagrams in markdown.
-
----
 
 ## Rules
 
@@ -31,23 +25,6 @@ Generate syntax-valid, theme-adaptive, accessible Mermaid diagrams in markdown.
 - **Theme & Colors:**
   - **DEFAULT:** STRICTLY NO hardcoded themes (`%%{init: ...}%%`), `style`, `classDef`, `linkStyle`, or inline colors. Keep raw standard syntax for IDE dark/light theme auto-adaptation.
   - **IF USER REQUESTS VIBRANT/CUSTOM COLORS:** ASK user for target IDE theme (Light vs Dark) BEFORE adding styles to ensure contrast.
-
----
-
-## Supported Diagram Icons
-
-Mermaid Chart supports icon packages in node labels and architecture diagrams:
-
-| Icon Package | Syntax / Prefix Example | Description & Usage |
-| :--- | :--- | :--- |
-| **Font Awesome** | `fa:fa-user`, `fa:fa-database`, `fa:fa-server` | General UI, database, server, and user icons |
-| **AWS Icons** | `aws:ec2`, `aws:s3`, `aws:lambda`, `aws:rds` | Amazon Web Services cloud architecture components |
-| **Azure Icons** | `azure:vm`, `azure:storage`, `azure:sql` | Microsoft Azure cloud architecture components |
-| **GCP Icons** | `gcp:compute`, `gcp:storage`, `gcp:bigquery` | Google Cloud Platform architecture components |
-
-Usage example: `nodeId["fa:fa-database Database Server"]` or `cloudNode["aws:s3 Storage Bucket"]`.
-
----
 
 ## Execution Workflow
 
