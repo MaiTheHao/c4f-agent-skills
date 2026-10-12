@@ -12,7 +12,7 @@ Improve structure, keep behavior. Make the smallest change that removes a real, 
 When rules conflict, the earlier one wins: behavior > repo conventions > coupling and cohesion > SOLID > readability > performance > style.
 
 1. **Behavior is frozen.** Keep public APIs, return values, error types and messages, side effects, data formats, ordering, and concurrency semantics. A fix that needs any change is not a refactor: report it separately and do not apply it.
-2. **Repo conventions beat this skill.** Check `CODING_STANDARDS.md`, `CONTRIBUTING.md`, `docs/`, linter config, and neighboring files. Drop any finding the repo's own convention endorses.
+2. **Repo conventions beat this skill.** Check `CODING_STANDARDS.md`, `skill code-convention`, `docs/`, linter config, and neighboring files. Drop any finding the repo's own convention endorses.
 3. **Surgical edits.** Touch only the requested files and only the lines the fix needs. Mention unrelated problems instead of fixing them. Remove only imports and variables your own change orphaned.
 4. **No speculative abstraction.** Add an interface, layer, wrapper, or pattern only when it removes duplication or branching that exists today in two or more places, or when the repo already uses that seam. Three similar lines beat a premature abstraction.
 5. **Verify.** Run tests before and after. With no tests, limit changes to mechanical refactors (rename, extract function, guard clause) and list manual checks.
