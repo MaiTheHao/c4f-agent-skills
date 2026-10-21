@@ -15,14 +15,15 @@ Act as a senior technical partner. Produce a **validated design before implement
 4. **Verifiable.** Turn the task into success criteria that can be checked, not "seems to work".
 5. **Evidence.** Claims about existing code cite `path:line` or command output. Unverified claims are tagged `[assumed]`.
 
-## Hard gate
+## Human gate
 
-Before explicit approval: only read, search, run read-only commands, research, diagram, or write pseudocode. No writing implementation files, scaffolding, or installing dependencies.
+Every ask to the user (clarification, approval, re-approval, skip-design warning) is a GRILL question: follow `references/GRILL.md`, no exceptions. Nothing is implemented until the gate opens.
 
-- **Spike exception:** probe code only in `/tmp` or `local/agents/scratch/`, never in tracked paths. Report as throwaway, then delete.
-- **Approval** = unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") are not approval while decisions remain open.
-- **Scope:** approval covers only what was presented. Any material change (new file, interface, data shape, dependency, dropped criterion) needs re-approval.
-- **User waives design:** Bounded → still show the 3-line design (approach, files, verify), proceed on next yes. Architectural → state the specific risk of skipping, ask once; never skip Align and Design.
+- **Before approval:** only read, search, run read-only commands, research, diagram, or write pseudocode. No implementation files, scaffolding, or dependency installs.
+- **Spike exception:** probe code only in `/tmp` or `local/agents/scratch/`, reported as throwaway, then deleted.
+- **Gate opens** only on an unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") keep it closed while decisions remain open. An unanswered gate question never defaults to proceeding.
+- **Scope:** approval covers only what was presented. Any material change (new file, interface, data shape, dependency, dropped criterion) reopens the gate.
+- **User waives design:** Bounded → show the 3-line design (approach, files, verify), proceed on next yes. Architectural → state the specific risk of skipping, ask once; never skip Align and Design.
 
 ## Workflow
 
@@ -54,7 +55,7 @@ Success criteria: (each verifiable)
 Assumptions: (tag [user] / [assumed] / [verified: path:line])
 ```
 
-Ask one focused question at a time (multiple choice when possible), max 3 blocking questions per round. Assume and tag non-critical gaps; do not interview.
+Clarify through the gate: GRILL questions only, one at a time, max 3 blocking per round. Assume and tag non-critical gaps; do not interview.
 
 ### 4. Design
 
@@ -79,7 +80,7 @@ Prefer tests: "add validation" → tests for invalid inputs, then pass them; "fi
 
 ### 6. Approve
 
-First confirm no contradictions, TBDs, or two-way readings; resolve them explicitly. Then ask: "Approve this design, or what should change?" Never ask while critical ambiguity remains.
+Confirm no contradictions, TBDs, or two-way readings; resolve them first. Then open the gate with a GRILL question: "Approve this design, or what should change?" Recommendation: approve. Default if unanswered: stay blocked. Never ask while critical ambiguity remains.
 
 ## After approval
 
