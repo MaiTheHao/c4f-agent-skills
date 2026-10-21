@@ -1,111 +1,98 @@
 ---
 name: executing-plans
-description: "Use when an approved plan from `writing-plans` is ready to execute, typically in a separate session with review checkpoints. Runs TaskUnits step by step with TDD, keeps changes surgical, verifies at runtime, and saves a walkthrough. Make sure to use this whenever the user asks to run, implement, resume, or continue a saved plan."
+description: Execute, resume, or continue an approved plan from `local/agents/plans/`, task by task with TDD, runtime verification, strict scope control, and a saved walkthrough. Use whenever the user asks to run or implement a saved plan.
 ---
 
 # Executing Plans
 
-Execute an approved plan task by task with strict TDD, runtime verification, and a walkthrough on completion. The approved plan is the contract: execution permission comes only from plan approval in `writing-plans`.
+The approved plan is the execution contract. Only an explicitly approved plan authorizes execution.
 
-## Principles
+## 1. Preflight
 
-1. **Think before editing.** State assumptions before each unit. If a step is ambiguous or the plan conflicts with the code, stop and ask; do not pick an interpretation silently.
-2. **Simplicity first.** Write the minimum logic that satisfies the step. Add no extras, abstractions, or error handling the spec does not call for.
-3. **Surgical changes.** Edit only the current unit's `Files`, matching existing style. Remove imports, variables, or functions that your own change orphaned. Leave unrelated dead code alone and list it in the walkthrough.
-4. **Goal-driven.** A step is done only when its verification passes. Loop on failure, within the retry limit below.
-5. **Evidence, not claims.** Every "done" points to real command output from this session, never a paraphrase or an expectation.
+1. Locate the plan in `local/agents/plans/`. If multiple plans match, ask which one.
+2. Require `Status: APPROVED`, `Open Questions: None`, and no unresolved `TODO`/`TBD`. Otherwise stop and return to `writing-plans`.
+3. Verify prerequisites and environment. Do not install or upgrade unlisted dependencies.
+4. Run and record the baseline command. Treat existing failures as pre-existing; do not fix them.
+5. Validate every `MODIFY`/`DELETE` anchor. Minor line shifts with unchanged symbols are acceptable; missing, renamed, or semantically changed symbols require stopping.
+6. Record unrelated working-tree changes and preserve them.
 
-## Preflight (before the first edit)
+**Resume:** Find the first unchecked step and re-run the last completed unit's `Verify` before continuing.
 
-1. Load the plan from `local/agents/plans/`. If several match, ask which; never guess.
-2. Confirm it is approved: `Status` is APPROVED, `Open Questions` is `None`, no `TODO`/`TBD` remains. Otherwise stop and return to `writing-plans`.
-3. Check `Prerequisites` (branch, dependencies, environment). Do not install or upgrade anything the plan does not list.
-4. Run the `Baseline` command and record the result. Failures that exist before any edit are **pre-existing**: list them in the walkthrough, do not fix them.
-5. Validate anchors: every `MODIFY`/`DELETE` file exists and its named symbol and line range match. Minor drift (lines shifted, symbol unchanged): proceed and note it. Material drift (symbol missing, renamed, or changed meaning): stop.
-6. Note uncommitted changes unrelated to the plan; never revert or touch them.
+## 2. Execution
 
-**Resuming:** if boxes are already checked, find the first unchecked step and re-run the last completed unit's `Verify` to confirm the state before continuing.
+- Execute units in dependency order and ID order. Parallelize only when supported and file scopes are disjoint.
+- Before each unit, state the key assumption in one line. If ambiguous or inconsistent with the code, stop and clarify.
+- For each testable step: write a failing test, confirm it fails for the expected reason, implement the minimum change, then confirm PASS.
+- For `(no-test)` steps, apply the change and run the specified verification.
+- Follow the unit's `Files` and existing code style. Remove only artifacts orphaned by your changes; leave unrelated dead code untouched.
+- Run every unit's `Verify` command. On failure, inspect full logs, fix the root cause, and rerun verification.
+- After 3 failed fix attempts for the same failure, stop and report attempts, logs, and the likely cause.
+- Check off a step only after its verification evidence exists.
 
-## Workflow
+## 3. Hard Constraints
 
-1. Run units whose `DependsOn` are all done, in ID order. Run sequentially unless the environment supports parallel agents; unit `Files` are disjoint, so parallel is safe.
-2. For each step: state the assumption in one line, write the failing test, run it and confirm it fails **for the expected reason**, implement minimally, run it and confirm PASS. For `(no-test)` steps: apply the change, then run the step's verification command.
-3. Run the unit's `Verify` commands. On failure, read the full untruncated logs and fix the root cause. After 3 failed fix attempts on the same failure, stop and report: what was tried, the logs, and your hypothesis.
-4. Tick `- [x]` for a step or unit only after its evidence exists.
-5. After all units pass, run the full regression command, check every `Acceptance` item with evidence, and save the walkthrough.
+- **Evidence:** Never claim completion without actual command output or observed runtime behavior. Verify every acceptance criterion.
+- **Tests:** Never weaken assertions, skip tests, suppress errors, add dummy fallbacks, or change tests to force a pass. Modify tests only when explicitly required by the plan.
+- **Scope:** Do not modify files outside the current unit's `Files`. Stop if additional files are required.
+- **Plan edits:** Without approval, modify the plan only to check completed boxes and append a dated `## Deviation Log` entry.
+- **Side effects:** Unless explicitly specified by the plan or requested by the user, do not install dependencies, commit, push, reset, force-push, delete out-of-scope files, or run migrations/destructive commands against non-local environments.
+- **Secrets:** Never expose secrets in logs or walkthroughs.
+- **Deviations:** If a blocker, scope deviation, or design contradiction arises, stop, document the affected decision, update the plan as permitted, and obtain approval before proceeding. Return to `brainstorming` if the design itself must change.
 
-## Hard gate
+## 4. Stop Conditions
 
-- Never mark a task done without concrete runtime evidence (passing tests, build, clean logs). If an Acceptance item describes runtime behavior, run it and observe it.
-- Never mask errors with dummy fallbacks, swallowed exceptions, broad catches, skipped or ignored tests, loosened assertions, or disabled checks. Fix root causes.
-- Never edit a test to make it pass. Change tests only when a plan step says so.
-- No scope expansion beyond the unit's `Files` and the plan spec.
-- Without approval, plan edits are limited to ticking checkboxes and appending a `## Deviation Log` (date, step, what happened, what was decided).
-- Do not, unless the plan explicitly says so: install dependencies, commit/push/reset/force-push, delete files outside `Files`, run migrations or destructive commands against any non-local environment, or print secrets into logs or the walkthrough. Commit only if the plan or the user asks.
-- If a scope deviation, blocker, or contradiction with the approved design appears: stop, explain it, name the affected decision, update the plan, and get approval before continuing. Return to `brainstorming` if the design itself must change.
+Stop and report when:
+- The plan is unapproved, incomplete, ambiguous, or conflicts with the code.
+- Anchor drift is material or a required file falls outside the unit scope.
+- A verification command is invalid or unrunnable. Report its exact error; do not silently substitute a weaker check.
+- The same failure persists after 3 fix attempts.
+- Baseline failures overlap modified files and prevent reliable attribution.
+- An irreversible action lacks rollback or explicit approval.
 
-## Stop conditions
+## 5. Completion
 
-Stop and report (do not push through) when any of these occur:
+After all units pass:
+1. Run the full regression command.
+2. Verify every acceptance criterion with concrete evidence.
+3. Save the walkthrough at `local/agents/walkthroughs/` using the exact plan filename.
+4. Include relevant pre-existing failures and unrelated issues without fixing them.
 
-- Anchor drift is material, or the plan conflicts with the code.
-- A step needs a file outside the unit's `Files`.
-- The same failure survives 3 fix attempts.
-- A verification command in the plan is wrong or not runnable (report the exact error; do not substitute a weaker check silently).
-- Baseline failures overlap the files the plan changes, so results cannot be attributed.
-- An irreversible step has no rollback and no recorded approval.
+Create the walkthrough directory if needed. Use repository-relative paths.
 
-## Locations
+## 6. Walkthrough Template
 
-- Plan: `local/agents/plans/YYYY-MM-DD-<feature-name>.md` (or `...-fix<N>.md`)
-- Walkthrough: `local/agents/walkthroughs/` with the **same filename as the plan** (so fix plans get `...-fix<N>.md` walkthroughs and never collide). Create the directory if missing.
-- Use repo-relative paths in all artifacts.
+Save as Markdown using the same filename as the plan.
 
-## Walkthrough template
-
-````markdown
 # [Feature Name] Walkthrough
 
 ## Summary
-[What was built and the goal achieved]
+[Goal and outcome]
 
 ## Changes Made
 | File | Status | Description |
-| :--- | :--- | :--- |
-| `path/to/file` | CREATED / MODIFIED | [summary] |
+|---|---|---|
+| `path/to/file` | CREATED / MODIFIED / DELETED | [Change] |
 
 ## Verification Evidence
+Record each command actually executed, relevant output, and exit status.
+
 ```bash
-# command executed, with the real output (trimmed to relevant lines) showing PASS and exit status
+# Actual command and relevant output
 ```
 
 ## Baseline vs Final
-- Baseline: [result before changes]
-- Final: [full regression result after changes]
-- Pre-existing failures (untouched): [list or "None"]
+- Baseline: [Result]
+- Final regression: [Result]
+- Pre-existing failures: [List or None]
 
 ## Key Decisions & Notes
-- [Edge cases handled, constraints respected, anchor drift noted]
+- [Edge cases, constraints, anchor drift]
 
 ## Deviations
-- [Entries from the Deviation Log, or "None"]
+- [Deviation log entries or None]
 
 ## Out-of-Scope Observations
-- [Unrelated issues noticed but not touched, or "None"]
+- [Unrelated findings or None]
 
 ## Acceptance Checklist
-- [x] [Item verified, with the command or observation that proved it]
-````
-
-## Decision rules
-
-| Condition | Action |
-| :--- | :--- |
-| Plan not approved or has placeholders | Stop, return to `writing-plans` |
-| Verification fails | Read full logs, fix root cause, re-verify |
-| Same failure after 3 attempts | Stop and report with logs and hypothesis |
-| All units pass | Run regression, check Acceptance, save walkthrough |
-| Scope deviation needed | Pause, log it, update plan, request approval |
-| Ambiguity or design conflict | Stop and clarify before editing |
-| Pre-existing failure found | Record it, do not fix it |
-| Resuming a partial run | Re-verify last completed unit, continue from first unchecked step |
+- [x] [Criterion and evidence]

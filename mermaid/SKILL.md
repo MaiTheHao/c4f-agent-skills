@@ -1,53 +1,70 @@
 ---
 name: mermaid
-description: Create, render, and validate Mermaid markdown diagrams. Use this skill when the user asks to visualize architecture, illustrate workflows, create flowcharts or ERDs, or debug and format existing Mermaid blocks.
+description: Create, render, validate, or debug Mermaid diagrams for workflows, architecture, sequences, ERDs, timelines, and other visual models.
 ---
 
 # Mermaid
 
-## Rules
+## 1. Choose Diagram
 
-- **Code Block Syntax:** MUST use `` ```mermaid ``. Never use tildes (`~~~`).
-- **Label Quoting:** ALWAYS wrap labels in double quotes `A["Label (Details)"]` to prevent parser breaks on special characters or spaces.
-- **Line Breaks:** MUST use `<br/>`. Never use `\n`.
-- **Node IDs:**
-  - MUST use camelCase without spaces.
-  - MUST NOT start with `o` or `x` (triggers unintended edge renderers).
-  - MUST NOT use reserved word `end` as node ID (use `End` or `A["end"]`).
-- **Edge & Link Syntax:**
-  - MUST use universal Mermaid edge syntax:
-    - Normal arrow with text: `A -->|"Text"| B`
-    - Dotted arrow with text: `A -.->|"Text"| B`
-    - Thick arrow with text: `A ==>|"Text"| B`
-  - NEVER use non-standard edge symbols such as `-.-X`, `-.-x`, `-- "Text" -->`, or `-. "Text" .->`.
-  - NEVER embed unescaped HTML tags, emojis, or special quotes inside pipe delimiters (`|...|`); keep text clean inside double quotes `-->|"Text"|`.
-- **Subgraphs:** Max nesting depth ≤ 2-3 levels.
-- **Theme & Colors:**
-  - **DEFAULT:** STRICTLY NO hardcoded themes (`%%{init: ...}%%`), `style`, `classDef`, `linkStyle`, or inline colors. Keep raw standard syntax for IDE dark/light theme auto-adaptation.
-  - **IF USER REQUESTS VIBRANT/CUSTOM COLORS:** ASK user for target IDE theme (Light vs Dark) BEFORE adding styles to ensure contrast.
+Select by intent:
 
-## Execution Workflow
+| Intent | Type |
+|---|---|
+| Process, decisions | `flowchart` |
+| Messages over time | `sequenceDiagram` |
+| Types, inheritance | `classDiagram` |
+| States, transitions | `stateDiagram-v2` |
+| Entities, relationships | `erDiagram` |
+| Schedule, dependencies | `gantt` |
+| Proportions | `pie` |
+| Git history | `gitGraph` |
+| Hierarchy, brainstorming | `mindmap` |
+| Chronology | `timeline` |
+| 2×2 prioritization | `quadrantChart` |
+| Numeric trends | `xychart-beta` |
+| Layered structure | `block-beta` |
+| Flow quantities | `sankey-beta` |
+| Packets, protocols | `packet-beta` |
+| Infrastructure, services | `architecture-beta` |
+| Task board | `kanban` |
+| Multi-axis comparison | `radar-beta` |
+| Hierarchical proportions | `treemap` |
+| System context | `C4Context` |
+| User experience stages | `journey` |
+| Requirements traceability | `requirementDiagram` |
 
-```text
-1. Select Chart Type (Flowchart | Sequence | Class | State | ERD | Gantt | Mindmap | Architecture | etc.)
-2. Determine Flow Direction (TD | LR)
-3. Draft Nodes & Edges (Enforce Node ID, Edge Syntax & Quoting rules)
-4. Audit Checklist (No themes/styles, valid IDs, standard edges, proper escaping)
-5. Output raw mermaid code block
-```
+Rules:
+- Default to `flowchart` if uncertain.
+- Architecture: logical dependencies → `flowchart`; infrastructure → `architecture-beta`; system context → `C4Context`.
+- If the request is too vague, ask whether it concerns a process, structure, or timeline.
+- Use `TD` for hierarchies/layers and `LR` for pipelines. Other types use their native layouts.
 
----
+## 2. Syntax
 
-## Forbidden Patterns
+- Use fenced ` ```mermaid ` blocks, never `~~~`.
+- Comments: `%% ...`. Use `<br/>` for label line breaks.
+- Quote labels containing spaces or special characters: `A["Total (USD)"]`.
+- Markdown labels: `` A["`**Bold** _italic_`"] ``.
+- Use camelCase node IDs without spaces. Never use `end` as an unquoted ID or start IDs with `o` or `x`.
+- Prefer `A -->|"Label"| B` for labeled edges.
+- Valid edges include `-->`, `---`, `-.->`, `==>`, `--o`, `--x`, `<-->`, and `~~~`. Never emit `-.-X`, `-.-x`, or `-.-o`.
+- Group related nodes with subgraphs; nesting ≤ 3 levels.
 
-- ✗ `~~~mermaid` (Use `` ```mermaid ``)
-- ✗ `A[Text (Detail)]` (Unquoted special characters)
-- ✗ `A["Line1\nLine2"]` (Use `<br/>`)
-- ✗ `end` as Node ID
-- ✗ `oNode` / `xNode` as Node ID
-- ✗ `A -- "Label" --> B` or `A -. "Label" .-> B` (Use universal `A -->|"Label"| B` or `A -.->|"Label"| B`)
-- ✗ `A -- "Label" -.-X B` or non-standard `-.-X` edge syntax
-- ✗ Emojis or unescaped HTML inside pipe delimiters (`|...|`)
-- ✗ `%%{init: {'theme': 'dark'}}%%` (Hardcoded themes)
-- ✗ Inline `style`, `classDef`, `linkStyle` without explicit user prompt & theme confirmation
-- ✗ Relying on colors alone to convey semantics
+## 3. Styling
+
+Default: no custom styling. Omit `init`, `style`, `classDef`, `linkStyle`, and inline colors unless explicitly requested. Let the host theme control appearance.
+
+If styling is requested, ask whether the target IDE uses a light or dark theme. Never convey meaning through color alone.
+
+## 4. Validate
+
+Before output, verify:
+- Correct diagram type and direction.
+- Valid fences, node IDs, labels, and edge syntax.
+- Special characters are quoted; line breaks use `<br/>`.
+- No unnecessary styles, themes, or comments.
+
+## 5. Output
+
+Return one ` ```mermaid ` block containing only the diagram. Add at most one short caption outside it. Include no explanatory prose unless requested.

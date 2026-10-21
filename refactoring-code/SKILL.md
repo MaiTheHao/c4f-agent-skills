@@ -1,86 +1,93 @@
 ---
 name: refactoring-code
-description: Review and improve the structure of existing code without changing its behavior. Finds code smells, tangled responsibilities, tight coupling, duplication, long or deeply nested functions, and unclear names, then reports or applies minimal, safe fixes. Make sure to use this skill whenever the user asks to refactor, clean up, tidy, simplify, optimize, or review the readability, maintainability, or quality of a file or a group of related files, including phrases like "code smell", "SOLID", "too messy", "hard to read", "review this code", "tối ưu code", "dọn code", or "refactor file này", even if they never say "refactor". Not for new features (use brainstorming), bug fixes, or runtime profiling.
+description: Review or refactor existing code for readability, maintainability, duplication, coupling, and structural quality without changing behavior. Use for requests to review, clean up, simplify, optimize, tidy, or refactor code, including code smells and SOLID. Not for new features, bug fixes, or runtime profiling.
 ---
 
 # Refactoring Code
 
-Improve structure, keep behavior. Make the smallest change that removes a real, nameable problem.
+Improve structure with the smallest change that removes a concrete problem. Preserve behavior.
 
-## Rules
+## 1. Priority
 
-When rules conflict, the earlier one wins: behavior > repo conventions > coupling and cohesion > SOLID > readability > performance > style.
+When rules conflict: behavior > repo conventions > cohesion/coupling > SOLID > readability > performance > style.
 
-1. **Behavior is frozen.** Keep public APIs, return values, error types and messages, side effects, data formats, ordering, and concurrency semantics. A fix that needs any change is not a refactor: report it separately and do not apply it.
-2. **Repo conventions beat this skill.** Check `CODING_STANDARDS.md`, `skill code-convention`, `docs/`, linter config, and neighboring files. Drop any finding the repo's own convention endorses.
-3. **Surgical edits.** Touch only the requested files and only the lines the fix needs. Mention unrelated problems instead of fixing them. Remove only imports and variables your own change orphaned.
-4. **No speculative abstraction.** Add an interface, layer, wrapper, or pattern only when it removes duplication or branching that exists today in two or more places, or when the repo already uses that seam. Three similar lines beat a premature abstraction.
-5. **Verify.** Run tests before and after. With no tests, limit changes to mechanical refactors (rename, extract function, guard clause) and list manual checks.
+- **Behavior frozen:** Preserve APIs, return values, error types/messages, side effects, data formats, ordering, and concurrency. If a change alters these, report it separately; do not apply it as a refactor.
+- **Repo conventions:** Check `CODING_STANDARDS.md`, `skill code-convention`, `docs/`, linter configuration, tests, and neighboring files. Ignore findings that follow intentional repo conventions or are already enforced by tooling.
+- **Scope:** Touch only requested files and necessary lines. Remove only imports/variables orphaned by your changes. Report unrelated issues without fixing them.
+- **Abstraction:** Add a layer, interface, or pattern only when it removes real duplication/branching in 2+ places or follows an existing seam. Prefer simple functions over speculative abstractions.
+- **Verification:** Run tests before and after. Without tests, limit changes to mechanical refactors and document manual checks.
 
-## Workflow
+## 2. Workflow
 
-1. **Pick the mode.** *Review* (report only) when the user says review, analyze, or check. *Refactor* (apply) when they say refactor, clean, optimize, or fix. If unclear, report first and ask once. If the work spans many files or about 200+ changed lines, report first and get approval.
-2. **Read.** Read every target file fully, grep callers of its public symbols, and read its tests and neighbors.
-3. **Baseline.** Run tests, lint, and type-check, and note the results.
-4. **Detect.** Use the checklists below. For multiple files, map imports and dependency direction first and flag cycles and layer violations before per-file issues.
-5. **Rank.** *High*: blocks testing or makes changes risky (cycles, god class, repeated switches, duplicated logic that has diverged). *Medium*: hurts comprehension. *Low*: naming and nesting. Fix safe High and Medium findings; list Low ones unless trivial.
-6. **Apply** one refactor at a time and rerun tests after each. Revert any step that fails.
-7. **Report** in the format below.
+1. **Mode:** Review/analyze/check → report only. Refactor/clean/simplify/optimize → apply changes. If unclear, report first and ask once. For broad changes spanning many files or ~200+ changed lines, report and obtain approval first.
+2. **Inspect:** Read target files fully; trace public-symbol callers and review relevant tests, dependencies, and neighboring code.
+3. **Baseline:** Run available tests, lint, and type checks. Record commands and results.
+4. **Analyze:** For multiple files, map imports and dependency direction first; identify cycles and layer violations.
+5. **Prioritize:** High = risky structure, cycles, duplicated logic that has diverged, or major testing barriers. Medium = comprehension and maintainability issues. Low = naming and nesting. Fix safe High/Medium findings; report Low findings unless trivial.
+6. **Refactor:** Apply one change at a time; rerun relevant tests after each. Revert a change if verification fails.
+7. **Report:** Use the output format below.
 
-## Smell checklist
+## 3. Code Smells
 
-Thresholds say where to look, not what is wrong. Flag only when you can state what is hard to read, test, or change.
+Thresholds are investigation triggers, not automatic defects. Report only concrete problems that affect comprehension, testing, or changeability.
 
-| Smell | Flag when | Fix |
+| Smell | Signal | Typical fix |
 |---|---|---|
-| Mysterious name | Needs a comment to explain, or is generic (`data`, `info`, `helper`, `manager`) | Rename to the project's domain term |
-| Long function | Over ~30 lines, or mixes levels (validate, compute, persist) | Extract by responsibility; name each piece for what it does |
-| Deep nesting | More than 3 levels | Guard clauses and early returns; keep the happy path unindented |
-| Long parameter list / data clumps | More than 4 params, or the same 3+ params travel together in 3+ places | Parameter object |
-| Boolean flag | A bool parameter switches between materially different behaviors | Split into separate functions (keep orthogonal toggles like `dryRun`) |
-| Duplicated code | Same logic (not just similar text) in 2+ places that change for the same reason | Extract and call from both; leave look-alikes that change for different reasons |
-| Repeated switches | Same `switch` or `if` cascade on a type in 2+ places | Polymorphism or a lookup map |
-| Feature envy | A method uses another object's data more than its own | Move it onto that object |
-| Primitive obsession | A string or int stands for a domain concept whose validation or formatting is repeated | Small dedicated type |
-| Message chains | `a.b().c().d()` walks through 3+ objects | Hide the walk behind one method |
-| Middle man | A class or function only delegates | Remove it, call the target directly |
-| Speculative generality | Unused params, single-implementation interfaces with no seam, hooks nobody calls | Delete |
-| Refused bequest | A subclass overrides or ignores most of what it inherits | Composition instead of inheritance |
-| What-comments | Comment restates the code | Rename or extract; keep comments that explain why |
-| Shotgun surgery / divergent change | `git log` shows one change touching many files, or one file changing for unrelated reasons | Group what changes together; split what changes apart |
+| Poor naming | Generic or unclear names requiring explanation | Use domain-specific names |
+| Long function | ~30+ lines or mixed responsibilities | Extract cohesive functions |
+| Deep nesting | >3 levels | Guard clauses, early returns |
+| Long parameters/data clumps | >4 params, or 3+ parameters repeatedly grouped in 3+ places | Parameter object |
+| Boolean flag | Selects materially different behavior | Split functions; retain orthogonal flags such as `dryRun` |
+| Duplication | Same logic in 2+ places changing for the same reason | Extract shared logic |
+| Repeated switches | Same type-based branching in 2+ places | Lookup map or polymorphism |
+| Feature envy | Method relies primarily on another object's data | Move behavior where appropriate |
+| Primitive obsession | Repeated validation/formatting of a domain string or integer | Dedicated type when justified |
+| Message chains | Traverses 3+ objects, e.g. `a.b().c().d()` | Encapsulate the traversal |
+| Middle man | Unit only delegates | Remove unnecessary indirection |
+| Speculative generality | Unused parameters, unnecessary interfaces, dead hooks | Remove unnecessary code |
+| Refused bequest | Subclass ignores or overrides most inherited behavior | Prefer composition |
+| Redundant comments | Comments merely restate code | Improve naming or structure; retain rationale |
+| Shotgun surgery/divergent change | Related changes span many files, or one file serves unrelated reasons | Reorganize by change responsibility |
 
-Skip anything the linter, formatter, or type checker already enforces. Report swallowed exceptions or leaked low-level errors, but do not change them, since that alters error semantics.
+Do not change swallowed exceptions or leaked low-level errors: report them because fixes may alter error semantics.
 
-## Structure checklist
+## 4. Structural Review
 
-- **Cohesion:** Can you describe the unit's purpose without "and"? Do its methods share the same fields? If not, split by responsibility, not by line count.
-- **Coupling:** Look for import cycles, domain code importing infrastructure, reach-through chains, and shared mutable state across modules. Report these; fix only where a seam already exists. Do not decouple things that change together for the same reason.
-- **SOLID, only when it causes real pain:**
-  - SRP: one file changes for two unrelated reasons.
-  - OCP: every new variant forces an edit to the same type switch.
-  - LSP: a subtype throws, narrows inputs, or ignores the base contract.
-  - ISP: implementors stub methods they do not use.
-  - DIP: high-level code imports a concrete low-level detail, and the repo has an abstraction for it elsewhere or tests must mock it.
-- **Patterns:** Use one only to fix a smell above (Strategy for repeated switches, Builder or Factory for many optional variants, Observer for notifying several dependents). Follow the shape of any existing pattern in the repo. A well-named function often beats a pattern.
+- **Cohesion:** A unit should have a clear purpose and related behavior/state. Split by responsibility, not line count alone.
+- **Coupling:** Identify import cycles, reversed dependency direction, reach-through chains, and shared mutable state. Fix only when an appropriate seam exists.
+- **SOLID:** Apply only when a concrete problem exists:
+  - SRP: one unit changes for unrelated reasons.
+  - OCP: every new variant requires modifying the same branching logic.
+  - LSP: subtype violates the base contract.
+  - ISP: implementors must provide unused methods.
+  - DIP: high-level logic depends on concrete infrastructure despite an existing abstraction or a real testing need.
+- **Patterns:** Use Strategy for repeated switches, Factory/Builder for genuinely complex construction, or Observer for multiple dependents when justified. Follow existing repo patterns. Prefer a well-named function when sufficient.
 
-## Report format
+## 5. Constraints
 
-```markdown
-### Summary
-[1-2 sentences: overall state and what was done]
+- Never expand scope or change behavior under the label of refactoring.
+- Do not add speculative abstractions or unrelated cleanup.
+- Do not fix issues already handled by repository tooling unless requested.
+- If tests are absent, make only mechanical changes such as renaming, extracting functions, or introducing guard clauses; document manual checks.
+- If safe behavior preservation cannot be established, report the issue instead of applying the change.
 
-### Findings
+## 6. Report Format
+
+# Summary
+[Overall state and work completed in 1–2 sentences.]
+
+# Findings
 | # | Severity | Location | Smell | Evidence | Fix | Status |
 |---|---|---|---|---|---|---|
-| 1 | High | `OrderService.java:40-120` | Repeated switches | Same `switch(type)` at L45 and L98 | Replace with `Map<Type, Handler>` | Applied |
+| 1 | High | `path/to/file:line` | [Smell] | [Concrete evidence] | [Minimal fix] | Applied / Reported |
 
-### Changes
-- `path/to/file`: [what changed and why]
+# Changes
+- `path/to/file`: [Change and rationale]
 
-### Left alone
-- [Skipped item and the reason: repo convention, behavior change, no tests, out of scope]
+# Left Alone
+- [Skipped issue and reason, or None]
 
-### Verification
-- Before: [command] -> [result]
-- After: [command] -> [result]
-```
+# Verification
+- Before: `[command]` — [result]
+- After: `[command]` — [result]
+- Manual checks / limitations: [details or None]

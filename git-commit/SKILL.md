@@ -1,76 +1,65 @@
 ---
 name: git-commit
-description: Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports auto-detecting type/scope, generating commit messages from diff, interactive staging, and secret validation.
+description: Analyze diffs, securely stage changes, generate Conventional Commit messages, and execute git commits when requested or invoked via /commit.
 ---
 
-# Mission
+# Git Commit
 
-Generate semantic, standardized conventional git commits via automated diff analysis and secure staging.
+## 1. Safety Rules (Mandatory)
 
----
+- **Secrets:** Never commit `.env`, private keys, tokens, credentials, or other secrets. Scan staged and unstaged changes before committing. If a secret is detected, stop and alert the user.
+- **Destructive actions:** Never use `git reset --hard`, force operations, or force-push unless explicitly requested. Never force-push to `main`/`master`.
+- **Git config:** Never modify `git config`.
+- **Hooks:** Never bypass hooks with `--no-verify` unless explicitly requested. If a hook fails, fix the cause and create a new commit; never amend.
+- **Scope:** Preserve unrelated changes. Stage only intended files; never blindly stage all changes when unrelated or sensitive files may be present.
 
-# Priority Rules
+## 2. Conventional Commit Format
 
-## P0 Mandatory Safety Constraints
+`<type>[optional scope][!]: <description>`
 
-- **Secrets Guard:** NEVER commit secrets (`.env`, `*.pem`, `credentials.json`, API tokens, private keys).
-- **Destructive Commands:** NEVER execute destructive commands (`--force`, `git reset --hard`) unless user explicitly requests.
-- **Config & Hooks:** NEVER alter `git config`. NEVER skip pre-commit hooks (`--no-verify`) unless explicitly asked.
-- **Protected Branches:** NEVER force-push to `main` / `master`.
-- **Hook Failure Handling:** IF commit fails due to pre-commit hooks, fix issues and create a NEW commit. Do NOT amend.
+- Keep the header under 72 characters.
+- Use lowercase, imperative, present-tense descriptions without trailing periods.
+- Use one logical change per commit.
+- Breaking changes: append `!` to the type/scope or include `BREAKING CHANGE: <details>` in the footer.
+- Add issue references, e.g. `Closes #123`, when supported by context.
 
-## P1 Preferred Formatting Constraints
-
-- **Format:** `<type>[optional scope]: <description>` (Header <72 chars, present tense, imperative mood, lowercase, no trailing period).
-- **Breaking Changes:** Append `!` to type/scope (e.g. `feat!: ...`) OR include `BREAKING CHANGE: <details>` in footer.
-- **Atomicity:** One logical change per commit.
-
----
-
-# Commit Type Matrix
-
-| Type | Semantics |
+| Type | Use |
 |---|---|
-| `feat` | New feature |
+| `feat` | New functionality |
 | `fix` | Bug fix |
-| `docs` | Documentation changes only |
-| `style` | Formatting / whitespace (no logic change) |
-| `refactor` | Code refactor (no feature or fix) |
+| `docs` | Documentation only |
+| `style` | Formatting; no logic changes |
+| `refactor` | Code restructuring without behavior changes |
 | `perf` | Performance improvement |
-| `test` | Adding or updating tests |
-| `build` | Build system or dependency changes |
-| `ci` | CI configuration / script changes |
-| `chore` | Maintenance / minor tasks |
-| `revert` | Reverting previous commit |
+| `test` | Test changes |
+| `build` | Build or dependency changes |
+| `ci` | CI configuration or scripts |
+| `chore` | Maintenance |
+| `revert` | Revert a previous commit |
 
----
+Choose the type and scope from the actual diff, not assumptions.
 
-# Execution Workflow
+## 3. Workflow
 
-```
-1. Inspect Status → Run `git status`, `git diff --staged` (or `git diff`), `git log --oneline -n 5`.
-2. Audit Secrets → Scan staged & modified files for credentials / keys / tokens.
-3. Stage Changes → Run `git add <files>` or `git add .` (selective / logical grouping).
-4. Analyze Diff   → Determine Type, Scope, Description, Breaking Changes, and Issue refs (`Closes #123`).
-5. Execute Commit → Run `git commit -m "<message>"` or multiline `git commit -m "$(cat <<'EOF' ... EOF)"`.
-```
+1. **Inspect:** Run `git status`, `git diff`, `git diff --staged`, and `git log --oneline -n 5`.
+2. **Review:** Understand staged, unstaged, and untracked changes. Identify logical commit boundaries and potential secrets.
+3. **Stage:** Stage only intended files or hunks. Preserve unrelated existing staging.
+4. **Validate:** Review the final staged diff and scan staged content for secrets.
+5. **Generate:** Infer type, scope, summary, breaking changes, and issue references from evidence.
+6. **Commit:** Execute `git commit` with the generated message.
+7. **Verify:** Check the commit result and remaining working-tree changes.
 
----
+Do not commit if the intended scope is unclear, secrets are detected, or unrelated changes cannot be safely separated. Ask the user when necessary.
 
-# Decision Rules
+## 4. Failure Handling
 
-- **IF** new capability added → **THEN** type = `feat`
-- **IF** bug corrected → **THEN** type = `fix`
-- **IF** breaking API change introduced → **THEN** append `!` to type/scope (`feat!:`) or add `BREAKING CHANGE:` footer
-- **IF** commit fails on hook error → **THEN** fix root cause and execute fresh `git commit` (Do NOT `--amend`)
-- **IF** staged file matches `.env` or credential patterns → **THEN** abort commit and alert user
+- **Hook failure:** Diagnose, fix, re-review, and create a fresh commit.
+- **Tests or validation fail:** Report the failure; do not claim success.
+- **Unexpected staging or repository state:** Stop before committing and clarify.
+- **Commit succeeds:** Report the commit hash, message, and any remaining changes.
 
----
+## 5. Output
 
-# Forbidden Patterns
+When invoked, perform the workflow rather than merely suggesting a message, provided repository access is available.
 
-- ✗ `git commit --no-verify` (unless requested)
-- ✗ `git push --force` or `git reset --hard` (unless requested)
-- ✗ Past tense commit messages (`fixed bug`, `added feature`)
-- ✗ Capitalized subject lines or trailing periods (`Fix bug.`)
-- ✗ Committing `.env` or secret key files
+Keep the final report concise: commit hash, Conventional Commit message, validation outcome, and unresolved issues. Never claim an action succeeded unless verified.
