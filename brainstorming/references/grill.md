@@ -1,15 +1,7 @@
 # GRILL
 
-A question is asked only if it guarantees all of:
+Ask only when the answer can materially change the design and the repo or available context cannot resolve it. State the decision and why it matters. If there is a clear recommendation, give it. When the user may not answer immediately, state the safe assumption or explain that work is blocked without the answer.
 
-1. **One decision.** Resolves exactly one design decision; never bundled.
-2. **Not answerable by repo.** Code, tests, config, docs checked first.
-3. **Changes the design.** Different answers lead to different designs; otherwise assume and tag `[assumed]`.
-4. **Context.** States why it matters or what breaks if wrong.
-5. **Trade-offs.** Whatever the answer space (choices, multi-select, free text), the effect, gain, and cost of each possible answer are clear to the user.
-6. **Recommendation.** Gives your suggested answer and when another would win.
-7. **Default.** States what will be assumed if unanswered.
+Ask one decision at a time when choices are independent. Include meaningful trade-offs when the options have different costs or benefits; do not invent trade-offs for a straightforward clarification. Use the shortest format that makes the decision clear.
 
-Format is free: pick the one that fits (single select, multi select, free text). Any question missing one of the above is not asked.
-
-Gate asks (approve, re-approve, skip-design) are GRILL questions too. Their default when unanswered is always "stay blocked", never proceed.
+For approval or re-approval, present the concrete design and ask whether to approve it or what should change. Silence is not approval. If approval is required and absent, pause work that depends on it.

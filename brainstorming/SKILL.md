@@ -19,6 +19,9 @@ Act as a senior technical partner. Produce a **validated design before implement
 
 Every ask to the user (clarification, approval, re-approval, skip-design warning) is a GRILL question: follow `references/GRILL.md`, no exceptions. Nothing is implemented until the gate opens.
 
+- **Trivial:** an explicit, exact user request authorizes the small change; do not ask for a separate design approval. If the request is not exact, clarify only what changes the implementation.
+- **Bounded and Architectural:** present the design and wait for explicit approval before implementation. A request to proceed without design uses the waiver flow below.
+
 - **Before approval:** only read, search, run read-only commands, research, diagram, or write pseudocode. No implementation files, scaffolding, or dependency installs.
 - **Spike exception:** probe code only in `/tmp` or `local/agents/scratch/`, reported as throwaway, then deleted.
 - **Gate opens** only on an unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") keep it closed while decisions remain open. An unanswered gate question never defaults to proceeding.
@@ -33,7 +36,7 @@ State the path so the user can override. When in doubt, take the heavier path. P
 
 | Path | Signals | Output | Approve |
 |---|---|---|---|
-| **Trivial** | 1 file, ≤~10 lines, no change to caller-visible behavior/interface/data/config, obvious check, bug cause already verified | One-line plan + verify check | Skip if user asked for exactly this |
+| **Trivial** | 1 file, ≤~10 lines, no change to caller-visible behavior, interface, or data semantics; obvious check; bug cause already verified. Documentation or config edits qualify only when they do not change behavior. | One-line plan + verify check | The exact user request authorizes the change; no separate approval |
 | **Spike** | "can we / how would we" feasibility; result is an answer, not kept code | Question + probe plan, then findings (probe = throwaway) | The probe |
 | **Bounded** | Scoped change to an existing flow; 2-5 files; no new shared interface | Short chat design: approach, files, verification | The design |
 | **Architectural** | New module/service, changed shared interface (2+ consumers), schema/persisted data, migration, auth/security, concurrency, cross-cutting concern, or 6+ files | Sectioned design with alternatives, then `writing-plans` | The design (plan approved inside `writing-plans`) |
@@ -42,7 +45,7 @@ State the path so the user can override. When in doubt, take the heavier path. P
 
 Read relevant code, patterns, contracts, tests, config first. Never ask what the repo can answer. Research externally only if it materially affects the design.
 
-- Bounded/Architectural: run existing tests for the affected area; record the result as baseline.
+- Bounded/Architectural: run relevant existing checks for the affected area and record the result as baseline. For non-behavioral documentation/config edits, state why tests do not apply and name the verification check.
 - Bugs: reproduce first, then find the root cause, not the symptom. If unreproducible, say so and tag the cause `[assumed]`.
 
 ### 3. Align
@@ -65,7 +68,7 @@ Clarify through the gate: GRILL questions only, one at a time, max 3 blocking pe
 - Include only relevant sections: Scope, Non-goals, Components, Interfaces, Data model, Main flow, Failure handling, Migration/compat, Rollback, Trade-offs.
 - Challenge only what affects correctness, security, performance, data integrity, compatibility, or operations: why is the assumption valid, what if it is wrong?
 - Failure handling: name concrete cases (invalid input, partial failure) and how to undo irreversible or data-touching changes.
-- Architectural only: exact names and signatures (types in/out) for every cross-unit interface; keep a decision log `Decision | Chosen | Rejected | Why`; present sections one at a time and confirm each; do not write a spec file.
+- Architectural only: exact names and signatures (types in/out) for every cross-unit interface; keep a decision log `Decision | Chosen | Rejected | Why`; do not write a spec file. Present one complete, concise design for approval instead of requiring section-by-section confirmation, unless a specific unresolved decision needs its own checkpoint.
 
 ### 5. Verify plan
 
@@ -88,7 +91,7 @@ The approved design is the contract; never change it silently.
 
 - **Spike:** report recommendation, delete the probe.
 - **Bounded:** implement test-first within listed files only, run each verify check, report evidence.
-- **Architectural:** emit the handoff block below, invoke `writing-plans`; after the plan is approved, `executing-plans`. No other skill in between.
+- **Architectural:** emit the handoff block below and invoke `writing-plans` immediately; after the plan is approved, use `executing-plans`. Do not insert another skill between the approved design and `writing-plans`.
 
 If implementation reveals a new constraint or contradiction: stop, explain, name the affected decision, propose the change, re-approve if material. Minor details need none.
 
