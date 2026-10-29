@@ -26,6 +26,7 @@ Every ask to the user (clarification, approval, re-approval, skip-design warning
 - **Spike exception:** probe code only in `/tmp` or `local/agents/scratch/`, reported as throwaway, then deleted.
 - **Gate opens** only on an unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") keep it closed while decisions remain open. An unanswered gate question never defaults to proceeding.
 - **Scope:** approval covers only what was presented. Any material change (new file, interface, data shape, dependency, dropped criterion) reopens the gate.
+- **Two gates (Architectural, or any path whose orchestrator requires a plan):** the design gate is this skill's; the plan gate is owned by `writing-plans`. A design yes never opens the plan gate. Until the plan gate opens, nothing is implemented, delegated for editing, or run through `executing-plans`.
 - **User waives design:** Bounded → show the 3-line design (approach, files, verify), proceed on next yes. Architectural → state the specific risk of skipping, ask once; never skip Align and Design.
 
 ## Workflow
@@ -34,12 +35,12 @@ Every ask to the user (clarification, approval, re-approval, skip-design warning
 
 State the path so the user can override. When in doubt, take the heavier path. Paths only upgrade: on hidden complexity, stop, say so, step up. If the request spans independent subsystems, split and brainstorm one at a time.
 
-| Path | Signals | Output | Approve |
-|---|---|---|---|
-| **Trivial** | 1 file, ≤~10 lines, no change to caller-visible behavior, interface, or data semantics; obvious check; bug cause already verified. Documentation or config edits qualify only when they do not change behavior. | One-line plan + verify check | The exact user request authorizes the change; no separate approval |
-| **Spike** | "can we / how would we" feasibility; result is an answer, not kept code | Question + probe plan, then findings (probe = throwaway) | The probe |
-| **Bounded** | Scoped change to an existing flow; 2-5 files; no new shared interface | Short chat design: approach, files, verification | The design |
-| **Architectural** | New module/service, changed shared interface (2+ consumers), schema/persisted data, migration, auth/security, concurrency, cross-cutting concern, or 6+ files | Sectioned design with alternatives, then `writing-plans` | The design (plan approved inside `writing-plans`) |
+| Path              | Signals                                                                                                                                                                                                         | Output                                                   | Approve                                                            |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Trivial**       | 1 file, ≤~10 lines, no change to caller-visible behavior, interface, or data semantics; obvious check; bug cause already verified. Documentation or config edits qualify only when they do not change behavior. | One-line plan + verify check                             | The exact user request authorizes the change; no separate approval |
+| **Spike**         | "can we / how would we" feasibility; result is an answer, not kept code                                                                                                                                         | Question + probe plan, then findings (probe = throwaway) | The probe                                                          |
+| **Bounded**       | Scoped change to an existing flow; 2-5 files; no new shared interface                                                                                                                                           | Short chat design: approach, files, verification         | The design                                                         |
+| **Architectural** | New module/service, changed shared interface (2+ consumers), schema/persisted data, migration, auth/security, concurrency, cross-cutting concern, or 6+ files                                                   | Sectioned design with alternatives, then `writing-plans` | The design (plan approved inside `writing-plans`)                  |
 
 ### 2. Inspect
 
@@ -91,7 +92,7 @@ The approved design is the contract; never change it silently.
 
 - **Spike:** report recommendation, delete the probe.
 - **Bounded:** implement test-first within listed files only, run each verify check, report evidence.
-- **Architectural:** emit the handoff block below and invoke `writing-plans` immediately; after the plan is approved, use `executing-plans`. Do not insert another skill between the approved design and `writing-plans`.
+- **Architectural:** emit the handoff block below and invoke `writing-plans` in the same turn as the design approval; after the user approves the plan, use `executing-plans`. Do not insert another skill between the approved design and `writing-plans`. NEVER go from design approval to implementation or `executing-plans` directly, and never approve the plan yourself.
 
 If implementation reveals a new constraint or contradiction: stop, explain, name the affected decision, propose the change, re-approve if material. Minor details need none.
 
@@ -110,11 +111,12 @@ Baseline: <test command> -> <result before change>
 
 ## Rules
 
-| Condition | Action |
-|---|---|
-| Unsure between two paths | Take the heavier |
-| Hidden complexity mid-work | Stop, say so, upgrade path |
-| Independent subsystems | Split, one at a time |
-| Ambiguous/conditional reply | Not approval; resolve open decisions |
-| Material change after approval | Re-approve first |
-| Bug cause unverified | Reproduce first; no fix design yet |
+| Condition                                        | Action                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Unsure between two paths                         | Take the heavier                                                                      |
+| Hidden complexity mid-work                       | Stop, say so, upgrade path                                                            |
+| Independent subsystems                           | Split, one at a time                                                                  |
+| Ambiguous/conditional reply                      | Not approval; resolve open decisions                                                  |
+| Material change after approval                   | Re-approve first                                                                      |
+| Architectural design approved, plan not approved | Invoke `writing-plans`; implementation stays blocked until the user approves the plan |
+| Bug cause unverified                             | Reproduce first; no fix design yet                                                    |
