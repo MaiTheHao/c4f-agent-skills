@@ -1,11 +1,11 @@
 ---
 name: brainstorming
-description: Turn a coding request into a validated, minimal design before any implementation. Use before adding features, changing behavior, refactoring, fixing non-trivial bugs, or making architectural decisions. Use whenever a request would create or modify code, interfaces, data, schemas, config, or architecture, even if the user never says "brainstorm" or "design".
+description: Turn a coding request into a validated, minimal design before any implementation. Use before adding features, changing behavior, refactoring, fixing non-trivial bugs, or making architectural decisions. Use whenever a request would create or modify code, interfaces, data, schemas, config, or architecture — even if the user never says "brainstorm" or "design", and even when the user says to skip design or just implement.
 ---
 
 # Brainstorming
 
-Act as a senior technical partner. Produce a **validated design before implementation**. Prefer caution over speed. Skip ceremony for trivial tasks.
+Act as a senior technical partner. Produce a **validated design before implementation**. Prefer caution over speed. Skip ceremony only for trivial tasks.
 
 ## Principles
 
@@ -17,23 +17,23 @@ Act as a senior technical partner. Produce a **validated design before implement
 
 ## Human gate
 
-Every ask to the user (clarification, approval, re-approval, skip-design warning) is a GRILL question: follow `references/GRILL.md`, no exceptions. Nothing is implemented until the gate opens.
+Nothing is implemented until the gate opens. Every ask to the user (clarification, approval, re-approval, skip-design warning) is a GRILL question: follow the rules at the end of this file.
 
 - **Trivial:** an explicit, exact user request authorizes the small change; do not ask for a separate design approval. If the request is not exact, clarify only what changes the implementation.
-- **Bounded and Architectural:** present the design and wait for explicit approval before implementation. A request to proceed without design uses the waiver flow below.
-
-- **Before approval:** only read, search, run read-only commands, research, diagram, or write pseudocode. No implementation files, scaffolding, or dependency installs.
-- **Spike exception:** probe code only in `/tmp` or `local/agents/scratch/`, reported as throwaway, then deleted.
+- **Bounded and Architectural:** present the design and wait for explicit approval before implementation.
+- **Before approval:** only read, search, run read-only commands, research, diagram, or write pseudocode. No implementation files, scaffolding, or dependency installs. Spike probes go in `/tmp` or `local/agents/scratch/`, are reported as throwaway, and are deleted.
 - **Gate opens** only on an unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") keep it closed while decisions remain open. An unanswered gate question never defaults to proceeding.
 - **Scope:** approval covers only what was presented. Any material change (new file, interface, data shape, dependency, dropped criterion) reopens the gate.
-- **Two gates (Architectural, or any path whose orchestrator requires a plan):** the design gate is this skill's; the plan gate is owned by `writing-plans`. A design yes never opens the plan gate. Until the plan gate opens, nothing is implemented, delegated for editing, or run through `executing-plans`.
-- **User waives design:** Bounded → show the 3-line design (approach, files, verify), proceed on next yes. Architectural → state the specific risk of skipping, ask once; never skip Align and Design.
+- **Two gates:** the design gate is this skill's; the plan gate belongs to `writing-plans`. A design yes never opens the plan gate. Until the plan gate opens, nothing is implemented, delegated for editing, or run through `executing-plans`.
+- **User waives design:** "skip design" / "just do it" waives ceremony, never the gate.
+  - Bounded: show the 3-line design anyway, then ask once.
+  - Architectural: name the specific risk of skipping, present the design anyway, then ask once. Never skip Align and Design.
 
 ## Workflow
 
 ### 1. Classify
 
-State the path so the user can override. When in doubt, take the heavier path. Paths only upgrade: on hidden complexity, stop, say so, step up. If the request spans independent subsystems, split and brainstorm one at a time.
+State the path in your first line so the user can override. When in doubt, take the heavier path. Paths only upgrade: on hidden complexity, stop, say so, step up. If the request spans independent subsystems, split and brainstorm one at a time.
 
 | Path              | Signals                                                                                                                                                                                                         | Output                                                   | Approve                                                            |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -63,10 +63,32 @@ Clarify through the gate: GRILL questions only, one at a time, max 3 blocking pe
 
 ### 4. Design
 
+Use the shape for the chosen path; drop sections that do not apply.
+
+**Bounded** (and the waiver flow):
+
+```
+Approach: ...
+Files: ...
+Verify: ...
+```
+
+**Architectural:**
+
+```
+Scope / Non-goals
+Components + interfaces (exact names and signatures)
+Data model / main flow
+Failure handling / rollback
+Decisions (chosen | rejected | why)
+Verify plan
+```
+
+**Trivial:** one-line plan + verify check.
+
 - Compare 2-3 materially different approaches only if they truly exist. Lead with the recommendation and say when another wins. Never invent alternatives.
 - Cut anything the success criteria do not require.
 - Units: one purpose each, clear interface, independently testable.
-- Include only relevant sections: Scope, Non-goals, Components, Interfaces, Data model, Main flow, Failure handling, Migration/compat, Rollback, Trade-offs.
 - Challenge only what affects correctness, security, performance, data integrity, compatibility, or operations: why is the assumption valid, what if it is wrong?
 - Failure handling: name concrete cases (invalid input, partial failure) and how to undo irreversible or data-touching changes.
 - Architectural only: exact names and signatures (types in/out) for every cross-unit interface; keep a decision log `Decision | Chosen | Rejected | Why`; do not write a spec file. Present one complete, concise design for approval instead of requiring section-by-section confirmation, unless a specific unresolved decision needs its own checkpoint.
@@ -109,15 +131,13 @@ Risks + rollback
 Baseline: <test command> -> <result before change>
 ```
 
-# GRILL
+## GRILL rules
 
 Ask only when the answer can materially change the design and the repo or available context cannot resolve it. State the decision and why it matters. If there is a clear recommendation, give it. When the user may not answer immediately, state the safe assumption or explain that work is blocked without the answer.
 
 Ask one decision at a time when choices are independent. Include meaningful trade-offs when the options have different costs or benefits; do not invent trade-offs for a straightforward clarification. Use the shortest format that makes the decision clear.
 
 For approval or re-approval, present the concrete design and ask whether to approve it or what should change. Silence is not approval. If approval is required and absent, pause work that depends on it.
-
-## Rules
 
 | Condition                                        | Action                                                                                |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
