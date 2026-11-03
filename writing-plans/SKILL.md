@@ -1,200 +1,157 @@
 ---
 name: writing-plans
-description: "Use when an approved design from `brainstorming` (Architectural path) or a clear spec needs a multi-step implementation plan, before touching code. Defines the canonical plan format (AffectedFiles, TaskUnits, Acceptance) that reviewers check and `executing-plans` runs. Make sure to use this whenever a written plan is needed, even if the user does not say \"plan\"."
+description: Use when an approved design or clear spec needs a multi-step implementation plan before touching code, or when the user asks for a plan.
 ---
 
 # Writing Plans
 
-Turn an approved design into a minimal, self-sufficient, verifiable plan. This skill is the single source of truth for plan format: planners write to it, reviewers check against it, `executing-plans` runs it.
+Turn an approved design into a **short, readable, verifiable plan**. This skill is the single source of truth for plan format.
 
-A plan is the set of decisions the executor cannot make alone: which files, which names and signatures, which spec values, which tests prove each unit. It is not the code. The executor writes idiomatic code once the interface and the test are exact.
+A plan decides only what the executor cannot decide alone: which files, which names that cross units, which business values, which tests prove each unit. **It is not the code.** The executor reads the repo and writes the code from intent + test.
 
-Design approval (from `brainstorming`) permits only this skill. Plan approval, obtained here, permits `executing-plans`.
+Design approval (from `brainstorming`) permits only this skill. Plan approval permits `executing-plans`.
+
+Write the plan in the user's language. Keep keys and field names in English.
 
 ## Principles
 
-1. **Think before planning.** The approved design (Goal, Constraints, Success criteria, Assumptions) is the input. Carry its assumptions into the plan; do not re-decide the design. If the design has a gap or contradiction, stop and return to `brainstorming` instead of guessing. If a step has several readings, present them.
-2. **Simplicity first.** Plan the fewest units and steps that meet the success criteria. No unrequested features, single-use abstractions, or speculative configurability. If the plan could be half as long, rewrite it.
-3. **Surgical scope.** List only files the work requires and follow existing conventions. Record unrelated problems under `Risks` as notes, never as steps. Every `AffectedFiles` entry and step must trace to the Goal or an Acceptance item.
-4. **Goal-driven.** Every Acceptance item is observable and covered by a `Verify` command with an expected result. Write tests first wherever behavior is testable.
-5. **Executor-proof.** Assume the executor has no chat history, sees only its own unit, and will not rediscover scope. If a decision is not in the plan, the executor must stop and ask, so leave none open.
-6. **Decide, don't transcribe.** A step is done when the executor can write exactly one reasonable thing from it, no more. A line that decides nothing is a gap; a body the signature and tests already determine is a transcript. Both are defects.
+1. **Human-gate first.** A human must be able to approve in one read. If it needs scrolling and re-reading, it is too long.
+2. **No code.** Intent, names, and values in words. Never implementation.
+3. **Minimal.** Fewest units and steps that meet the success criteria. No extras, no speculative config.
+4. **Surgical.** List only files the work requires. Unrelated problems go to `Risks` as notes, never steps.
+5. **Verifiable.** Every Acceptance item is observable and has a `command -> expected` check.
+6. **Don't re-decide.** Carry the design's assumptions as-is. Design gap or contradiction -> stop, return to `brainstorming`.
+7. **No open decisions.** If the executor would have to guess a business value or a name, put it in the plan. Everything else is the executor's job.
+
+## What a plan may and may not contain
+
+**Allowed**
+
+- Repo-relative file paths and symbol names (`Class.method`) as anchors.
+- One-line signatures, only under `Produces` / `Consumes` (cross-unit contracts).
+- Business values in plain words or numbers ("priority 1..100", "only when status is New").
+- Test names + one-phrase `input -> expected`.
+- Shell commands in `Verify` and `Baseline`.
+- The Mermaid diagram.
+
+**Forbidden**
+
+- Code blocks (except Mermaid and `Verify`/`Baseline` commands).
+- Function bodies, pseudocode, assertion code, SQL/JSON/config snippets.
+- Line ranges, copied existing code, long lists of values (e.g. i18n key tables).
+- Multi-sentence logic inside one step.
+- Re-running steps ("run test -> FAIL", "run test -> PASS"). `executing-plans` already does red/green.
+
+If a step needs more than one sentence to explain _how_, delete the _how_; keep the _what_.
+
+## Size budget (hard)
+
+- Whole plan: about 120 lines. Over ~150 means cut or split.
+- Step: one sentence, max ~25 words, one action.
+- Unit: max ~10 lines. At most 5 units, about 15 files; otherwise split into sequential plans.
+- `Needs Your Attention`: max 3 bullets, one line each.
+- `Rules`: max 5 one-line bullets.
+- `Review Focus`: max 3 items, one line each.
 
 ## Workflow
 
-1. Read the approved design; read code only to fill gaps. Confirm the design block has Goal, Success criteria, Assumptions, and a Baseline. If any is missing, return to `brainstorming`.
-2. Map files first: decide which files are created or modified and the one responsibility of each. Follow existing patterns; split a file only if it is already unwieldy. Anchor every existing-code reference with a symbol name and a line range.
-3. Fix exact signatures and types, then group work into TaskUnits per the partitioning rules and draw the diagram.
-4. Write `Review Focus` (see below), then pin each item to a test step in the owning unit.
-5. Run the self-review checklist and fix issues inline.
-6. Present for approval in the calling agent's checkpoint format (default: AffectedFiles table, one line per unit, 3-6 key changes). Nothing is saved yet.
-7. Save the approved plan with `Status: APPROVED` and hand off to `executing-plans`.
+1. Read the approved design; read code only to fill gaps. Confirm it has Goal, Success criteria, Assumptions, Baseline. Missing -> return to `brainstorming`.
+2. Map files: one responsibility per file, follow existing patterns.
+3. Fix cross-unit names, then group into TaskUnits (rules below) and draw the diagram.
+4. Add `Review Focus` and pin each item to a test step.
+5. Self-review (checklist below), fix inline.
+6. Present the **approval card** in chat (format below). Nothing is saved yet.
+7. On approval: save with `Status: APPROVED`, reply with the path, hand off to `executing-plans`.
+
+## Approval card (what the human reads at the gate)
+
+Show this in chat, not the full plan. Max ~15 lines:
+
+```
+Plan: <name>
+Goal: <one sentence>
+Units:
+  U1 <name> - <one line: what it delivers>   [files: n]
+  U2 ...                                     [depends: U1]
+Files: <N> (new a / modify b / delete c)
+Needs your attention: <max 3 one-liners, or "none">
+Verify: <how we know it's done, one line>
+Approve this plan, or what should change? (Recommendation: approve)
+```
+
+Silence or conditional replies are not approval. User asks for changes -> update the draft and show the card again.
 
 ## Hard gate
 
 - Write no code during planning. The only file ever written is the plan, and only after approval.
 - Wait for explicit approval before saving and before any execution.
-- No placeholders (`TODO`, `TBD`, "handle edge cases", "add validation later", "write tests for the above", or a type or function no unit defines). Every step carries explicit logic or commands.
+- No placeholders (`TODO`, `TBD`, "handle edge cases", "add validation later").
 - Every plan embeds a valid Mermaid diagram.
-- Resolve `Open Questions` with the user before approval. A saved plan states `None`.
-- Be self-sufficient: use exact repo-relative paths, symbol names, and line ranges.
-- Never put secrets, tokens, or real credentials in the plan; reference env var names instead.
-- Never overwrite an existing plan file. If the path exists, ask whether this is a revision (new `-fix<N>` or suffixed name) or a replacement.
-- After approval the plan is frozen. Only `executing-plans` may tick checkboxes or append a `Deviation Log`; any other change goes back through approval.
+- `Open Questions` is resolved with the user before approval. A saved plan says `None`.
+- No secrets or credentials; reference env var names.
+- Never overwrite an existing plan file. If the path exists, ask: revision (`-fix<N>`) or replacement.
+- After approval the plan is frozen. Only `executing-plans` may tick checkboxes or append a `Deviation Log`.
 
 ## Partitioning
 
-- A unit is the smallest piece that carries its own test cycle and that a reviewer could reject while approving its neighbor. Fold setup, config, scaffolding, and docs into the unit whose deliverable needs them. Each unit ends with an independently testable deliverable.
-- At most 5 TaskUnits; a small change may be one. If the work needs more than 5 units or about 15 files, split it into sequential plans, each with its own approval.
-- Unit `Files` sets are disjoint, and every `AffectedFiles` entry belongs to exactly one unit.
-- `DependsOn` is `none` or unit IDs, acyclic, used only for real ordering. Prefer units that can run in parallel, but never split a unit just to create parallelism.
-- Cross-unit signatures are declared once, in the producing unit's `Produces`; consuming units copy the exact signature into `Consumes`. The producing unit runs first.
-- Every unit has a non-empty `Spec` and `Verify`; every file in `Files` appears in at least one step.
+- A unit is the smallest piece with its own test cycle that a reviewer could reject independently. Fold setup, config, docs into the unit that needs them.
+- Unit `Files` are disjoint; every `AffectedFiles` entry belongs to exactly one unit.
+- `DependsOn` is `none` or unit IDs, acyclic, only for real ordering. Never split just to create parallelism.
+- A cross-unit signature is declared once in the producer's `Produces`; consumers copy it exactly into `Consumes`.
+- A unit's `Verify` must pass with only its `DependsOn` units done.
 - No step touches a file outside its unit's `Files`.
 
-## Step granularity
+## Steps
 
-- 2-5 minutes each, one action with a checkable result.
-- Name the exact file path, method signature with parameter and return types, and the specific values the spec pins.
-- By step kind:
-  - **Test step:** test name, inputs, and assertions as code, with the spec's exact values.
-  - **Code step:** file, exact signature, and the logic only where signature and tests leave a choice (one line: library call or data structure). Precise prose or pseudocode (max ~15 lines) only for an algorithm they do not determine, or for exact copy the spec fixes. Full implementations are the executor's job.
-  - **Verification step:** the command and the output that means it passed.
-  - **Cross-unit reference:** point to the producing unit's `Produces`; do not repeat its code.
-- Test-first: failing test, run to see it fail, minimal logic, run to see it pass.
-- **No-test exception:** for non-behavioral changes (config, docs, rename, move, generated files, migration scripts) mark the step `(no-test: reason)` and give a verification command instead of a failing test. Behavioral code never gets this exception.
-- Irreversible or data-touching steps (migration, delete, config in shared environments) include a rollback command or state `irreversible` under `User Review Required`.
+- One sentence: **file or symbol + what changes + the business value if one is pinned.**
+- Test steps name the test and say `input -> expected` in plain words. Test-first for behavior.
+- Non-behavioral change (config, docs, rename, move, delete): mark `(no-test: reason)`.
+- Irreversible or data-touching step: give a rollback command, or list it under `Needs Your Attention` as irreversible.
+
+Good: `BangChanDoanPage` - save only when the slip is in status New; otherwise show the "only editable when New" warning.
+Bad: a method body, a try/catch outline, or "call X, then Y, then loop over Z".
 
 ## Verify rules
 
-- `Verify` lists exact commands with expected results, in the form `command -> expected`.
-- Commands are non-interactive and deterministic: exit code or a matched output line, never "looks correct".
-- A unit's `Verify` must pass when only its `DependsOn` units are done.
-- The final unit or `Acceptance` includes the full regression command from the design's Baseline, expected to match the baseline result except for intended changes.
-- Runtime behavior (HTTP endpoint, CLI, job) is verified by running it, not only by unit tests, whenever an Acceptance item describes runtime behavior.
+- `command -> expected`, non-interactive, deterministic (exit code or matched line). Never "looks correct".
+- The last unit or `Acceptance` includes the full regression command from the Baseline.
+- If an Acceptance item describes runtime behavior, verify it by running it, not only by unit tests. If it cannot run here, say so in `Risks`.
 
 ## Review Focus
 
-The spec says what the software must do, not everything it will meet; its silence on an input is not permission for that input to break. List up to 5 input classes or failure modes the design implies but no Acceptance item covers, most likely to bite first (empty or null input, duplicates, boundary values, concurrent calls, partial failure, malformed data). Each line names the input or condition and the behavior a reasonable person expects. Then pin each one to a test step in the unit that owns the code, tagged `(RF<n>)`. An empty section means you checked and found none.
+Up to 3 inputs or failure modes the design implies but no Acceptance item covers (empty input, duplicates, boundary, partial failure). One line each: `input -> expected behavior`. Pin each to a test step tagged `(RF<n>)`. Empty is fine if none found.
 
 ## Locations
 
 - Plan: `local/agents/plans/YYYY-MM-DD-<feature-name>.md` (kebab-case)
-- Fix plan (from a work review): `local/agents/plans/YYYY-MM-DD-<feature-name>-fix<N>.md`, containing only files that need changes
-- Create the directory if missing. Use repo-relative paths inside the plan.
+- Fix plan: `local/agents/plans/YYYY-MM-DD-<feature-name>-fix<N>.md`, only files that need changes
+- Create the directory if missing. Repo-relative paths only.
 
 ## Template
 
-The builder parses `Goal`, `AffectedFiles`, `TaskUnits`, `Spec`, `Verify`, `Acceptance`, and the unit fields `Files` and `DependsOn`. Never rename or omit them. Bracketed text is filled per the "How to fill" table below.
-
-````markdown
-# [Feature Name] Implementation Plan
-
-**Status:** APPROVED (YYYY-MM-DD)
-**Design:** [repo-relative path to the approved design/spec, or "inline in chat"]
-
-## Goal
-[One sentence]
-
-## Out of Scope
-- [Non-goals from the design, or "None"]
-
-## Architecture
-[Approved approach in 2-4 lines]
-
-```mermaid
-graph TD
-    U1[U1: Component A] --> U2[U2: Component B]
-```
-
-## Assumptions
-- [Carried from the approved design, marked as assumptions]
-
-## Prerequisites
-- Branch / dependencies / environment: [what must already be true]
-- Baseline: `command` -> [result before any change, including known pre-existing failures]
-
-## User Review Required
-> [!IMPORTANT]
-> [Breaking changes, irreversible steps, key decisions, risks needing approval, or "None"]
-
-## Open Questions
-None
-
-## AffectedFiles
-| File | Action | Why |
-| :--- | :--- | :--- |
-| `path/to/file` | NEW / MODIFY / DELETE | [reason tied to Goal or Acceptance] |
-
-## Constraints
-- [Project-wide limits copied verbatim from the design: version floors, dependency limits, naming/copy rules, platform. Apply to every unit.]
-- Convention: [existing pattern to follow] (ref: `path/to/example`)
-
-## Review Focus
-- RF1: [input or condition] -> [expected behavior] (pinned in U<n>)
-
-## TaskUnits
-
-### U1: [Component Name]
-- **Files:** `path/to/file`, `path/to/other`
-- **DependsOn:** none
-- **Consumes:** none | [exact signatures from earlier units, e.g. `U1: UserRepo.findById(String id): Optional<User>`]
-- **Produces:** none | [exact signatures later units rely on]
-- **Spec:**
-  - [ ] **Step 1:** `path/to/file` (`symbol`, L10-40) - write failing test `name`: input -> expected (one extra test per pinned `(RF<n>)`)
-  - [ ] **Step 2:** run `command` -> FAIL with [expected message]
-  - [ ] **Step 3:** `path/to/file` - implement `Type method(ParamType p)`: [logic only if not determined by signature + test]
-  - [ ] **Step 4:** run `command` -> PASS
-- **Verify:** `command` -> [expected result]
-
-## Acceptance
-- [ ] AC1: [Observable, checkable criterion] (verified by U1)
-- [ ] ACn: full regression `baseline command` -> matches Baseline except intended changes (verified by U<last>)
-
-## Risks
-- [Risk and mitigation; unrelated issues noticed, as notes only]
-````
-
-## How to fill
-
-| Section | Write | Avoid |
-| :--- | :--- | :--- |
-| Goal | One sentence, the outcome, no how | Lists, implementation detail |
-| Out of Scope | Design's non-goals, one line each | New scope not in the design |
-| Architecture | Chosen approach and why in 2-4 lines; diagram nodes match unit IDs | Re-debating rejected options |
-| Assumptions | Design assumptions verbatim | Your own new guesses (ask instead) |
-| Baseline | Real command run on the untouched tree, with its actual result | "tests pass" without a command |
-| AffectedFiles | One row per file, `Why` cites Goal or an AC | Files "just in case" |
-| Constraints | Exact values from the design (versions, limits, names); conventions as `Convention:` lines with a reference file path | Paraphrase, generic best practice, style opinions the repo does not follow |
-| Review Focus | Concrete input + expected behavior, ranked | Vague "handle errors"; items already in Acceptance |
-| Unit Spec | Steps per "Step granularity" | Full function bodies, steps that decide nothing |
-| Consumes / Produces | Exact name, params, return type | Prose descriptions of interfaces |
-| Verify | `command -> expected` runnable as-is | Manual inspection |
-| Acceptance | Observable behavior, each mapped to a unit | Restating steps |
-| Risks | Real risk plus mitigation; noticed-but-unrelated issues | Turning them into steps |
+USE TEMPLATE DEFINITION: references/template.md
 
 ## Self-review
 
-1. **Spec coverage:** every design requirement and success criterion maps to a unit and an Acceptance item; list gaps and add units.
-2. **Step scan:** no placeholders or ambiguous wording; every step lets the executor write exactly one reasonable thing; no step carries a body the signature and tests already determine.
-3. **Partitioning:** files disjoint, `DependsOn` acyclic, at most 5 units, no step leaves its unit's `Files`.
-4. **Traceability:** every `AffectedFiles` entry has a step and traces to the Goal or an Acceptance item; nothing exceeds the design's success criteria.
-5. **Type consistency:** names, signatures, and types in every `Consumes` match the producing unit's `Produces` exactly (`clearLayers()` in U2 vs `clearFullLayers()` in U4 is a bug).
-6. **Review Focus:** each RF item has a pinned test step in its owning unit; the list has at most 5 items.
-7. **Verification:** every Acceptance item names its verifying unit and is covered by a `Verify`; every `Verify` is runnable `command -> expected`; the regression command is present; every behavioral step is test-first; every `no-test` step states its reason.
-8. **Anchors:** symbols and line ranges exist in the current code.
-9. **Diagram and header:** diagram is valid and matches the units; `Prerequisites` has a Baseline; `Open Questions` is `None`.
-10. **Proportion:** if the plan is several times longer than the design, or code blocks dominate it, replace bodies with signatures, test names, and assertions, then re-check that each step is still unambiguous.
+1. **Coverage:** every success criterion maps to a unit and an Acceptance item.
+2. **No code:** no code blocks beyond Mermaid and commands; no bodies, pseudocode, or line ranges.
+3. **One-sentence steps:** each step <= ~25 words, one action, no _how_.
+4. **Partitioning:** files disjoint, `DependsOn` acyclic, <= 5 units, steps stay in unit `Files`.
+5. **Contracts:** every `Consumes` matches its producer's `Produces` exactly.
+6. **Verification:** every AC names a verifying unit; every `Verify` is runnable `command -> expected`; regression command present; every behavioral step is test-first or `no-test` with a reason.
+7. **Gate-readable:** the approval card fits ~15 lines; the plan is ~120 lines.
+8. **Header:** Baseline present; `Open Questions` is `None`.
 
 ## Decision rules
 
-| Condition | Action |
-| :--- | :--- |
-| Self-review finds ambiguity, placeholders, or a transcript-style step | Fix inline before presenting |
-| `Open Questions` not empty | Ask the user, merge answers, continue |
-| Design gap or contradiction found | Stop, return to `brainstorming` |
-| More than 5 units or about 15 files | Split into sequential plans |
-| Independent review returns `CHANGES_REQUIRED` | Fix the draft, re-review; after 3 rounds, escalate to the user |
-| Plan file already exists | Never overwrite; ask revision vs replacement |
-| User approves | Save with `Status: APPROVED`, reply with the path, hand off to `executing-plans` |
-| User requests changes | Update the draft, request approval again |
+| Condition                                            | Action                                                                           |
+| :--------------------------------------------------- | :------------------------------------------------------------------------------- |
+| Step contains code, pseudocode, or a "how" paragraph | Cut to intent before presenting                                                  |
+| Plan over ~150 lines                                 | Cut, or split into sequential plans                                              |
+| `Open Questions` not empty                           | Ask the user, merge the answer                                                   |
+| Design gap or contradiction                          | Stop, return to `brainstorming`                                                  |
+| More than 5 units or ~15 files                       | Split into sequential plans                                                      |
+| Independent review returns `CHANGES_REQUIRED`        | Fix, re-review; after 3 rounds escalate to the user                              |
+| Plan file exists                                     | Never overwrite; ask revision vs replacement                                     |
+| User approves                                        | Save with `Status: APPROVED`, reply with the path, hand off to `executing-plans` |
+| User requests changes                                | Update the draft, show the card again                                            |

@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Execute, resume, or continue an approved plan from `local/agents/plans/`, task by task with TDD, runtime verification, strict scope control, and a saved walkthrough. Use whenever the user asks to run or implement a saved plan.
+description: Use when the user asks to run, resume, or continue an approved plan.
 ---
 
 # Executing Plans

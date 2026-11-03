@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Turn a coding request into a validated, minimal design before any implementation. Use before adding features, changing behavior, refactoring, fixing non-trivial bugs, or making architectural decisions. Use whenever a request would create or modify code, interfaces, data, schemas, config, or architecture — even if the user never says "brainstorm" or "design", and even when the user says to skip design or just implement.
+description: Design before code. Use before any request that creates or changes code, behavior, interfaces, data, config, or architecture, even if the user says skip design.
 ---
 
 # Brainstorming
