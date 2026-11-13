@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Stage intended changes only, generate a Conventional Commit message, and commit safely when invoked via /commit.
+description: Use when reviewing Git diffs, selecting and staging changes, generating Conventional Commit messages, or creating commits. Also use when invoked via `/commit`.
 ---
 
 # Git Commit

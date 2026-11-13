@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when the user asks for a plan, or a design/requirement needs a plan before implementation. Defines the rules for writing a short, decision-only, verifiable plan. Never code.
+description: Use when the user requests an implementation plan or needs agreed requirements/design converted into executable work units. Produce a concise, decision-only, verifiable plan. Never code.
 ---
 
 # Writing Plans

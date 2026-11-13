@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Design before code. Use before any request that creates or changes behavior, interfaces, data, config, or architecture and is not a trivial exact edit. Produces a validated design; Architectural designs are saved after approval.
+description: Use before non-trivial changes to behavior, interfaces, data, configuration, or architecture. Explore alternatives, constraints, and trade-offs; produce a validated design before implementation. Skip trivial exact edits.
 ---
 
 # Brainstorming

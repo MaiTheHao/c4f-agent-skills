@@ -1,6 +1,6 @@
 ---
 name: mermaid
-description: Create, render, validate, or debug Mermaid diagrams. Output one valid fenced block; default to no styling.
+description: Use to create, render, validate, or debug Mermaid diagrams, including workflows, architecture, sequence diagrams, ERDs, and timelines.
 ---
 
 # Mermaid

@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when the user asks to run, resume, or continue a plan written with writing-plans. Executes units test-first, proves each with its Verify command, and records a walkthrough.
+description: Use to execute, resume, or continue a plan created with `writing-plans`. Implement each unit test-first, run its Verify command, and record a walkthrough.
 ---
 
 # Executing Plans
