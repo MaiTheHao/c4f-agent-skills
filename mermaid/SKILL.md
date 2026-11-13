@@ -1,70 +1,35 @@
 ---
 name: mermaid
-description: Create, render, validate, or debug Mermaid diagrams for workflows, architecture, sequences, ERDs, timelines, and other visual models.
+description: Create, render, validate, or debug Mermaid diagrams. Output one valid fenced block; default to no styling.
 ---
 
 # Mermaid
 
-## 1. Choose Diagram
+## Pick type
 
-Select by intent:
-
-| Intent | Type |
-|---|---|
-| Process, decisions | `flowchart` |
-| Messages over time | `sequenceDiagram` |
-| Types, inheritance | `classDiagram` |
-| States, transitions | `stateDiagram-v2` |
-| Entities, relationships | `erDiagram` |
-| Schedule, dependencies | `gantt` |
-| Proportions | `pie` |
-| Git history | `gitGraph` |
-| Hierarchy, brainstorming | `mindmap` |
-| Chronology | `timeline` |
-| 2×2 prioritization | `quadrantChart` |
-| Numeric trends | `xychart-beta` |
-| Layered structure | `block-beta` |
-| Flow quantities | `sankey-beta` |
-| Packets, protocols | `packet-beta` |
-| Infrastructure, services | `architecture-beta` |
-| Task board | `kanban` |
-| Multi-axis comparison | `radar-beta` |
-| Hierarchical proportions | `treemap` |
-| System context | `C4Context` |
-| User experience stages | `journey` |
-| Requirements traceability | `requirementDiagram` |
-
-Rules:
+- Process/decisions → `flowchart`; messages over time → `sequenceDiagram`; types/inheritance → `classDiagram`; states → `stateDiagram-v2`; entities → `erDiagram`; schedule → `gantt`; git history → `gitGraph`; hierarchy → `mindmap`; chronology → `timeline`; 2×2 → `quadrantChart`; numeric trends → `xychart-beta`; layers → `block-beta`; flow quantities → `sankey-beta`; packets → `packet-beta`; infra/services → `architecture-beta`; task board → `kanban`; multi-axis → `radar-beta`; hierarchical proportions → `treemap`; system context → `C4Context`; UX stages → `journey`; requirements → `requirementDiagram`.
 - Default to `flowchart` if uncertain.
-- Architecture: logical dependencies → `flowchart`; infrastructure → `architecture-beta`; system context → `C4Context`.
-- If the request is too vague, ask whether it concerns a process, structure, or timeline.
-- Use `TD` for hierarchies/layers and `LR` for pipelines. Other types use their native layouts.
+- Architecture: logical deps → `flowchart`; infra → `architecture-beta`; system context → `C4Context`.
+- Too vague → ask: process, structure, or timeline?
+- `TD` for hierarchies/layers; `LR` for pipelines.
 
-## 2. Syntax
+## Syntax pitfalls (models get these wrong)
 
-- Use fenced ` ```mermaid ` blocks, never `~~~`.
-- Comments: `%% ...`. Use `<br/>` for label line breaks.
-- Quote labels containing spaces or special characters: `A["Total (USD)"]`.
-- Markdown labels: `` A["`**Bold** _italic_`"] ``.
-- Use camelCase node IDs without spaces. Never use `end` as an unquoted ID or start IDs with `o` or `x`.
-- Prefer `A -->|"Label"| B` for labeled edges.
-- Valid edges include `-->`, `---`, `-.->`, `==>`, `--o`, `--x`, `<-->`, and `~~~`. Never emit `-.-X`, `-.-x`, or `-.-o`.
-- Group related nodes with subgraphs; nesting ≤ 3 levels.
+- Fence with ` ```mermaid ` — never `~~~`.
+- Node IDs: camelCase, no spaces. **Never use `end` as an unquoted ID.** Never start an ID with `o` or `x` (collides with `--o` / `--x` edge markers).
+- `<br/>` for label line breaks — never `\n`.
+- Quote labels with spaces or special chars: `A["Total (USD)"]`.
+- Markdown labels: ``A["`**Bold**`"]``.
+- Edge labels: `A -->|"Label"| B`.
+- Valid edges only: `-->`, `---`, `-.->`, `==>`, `--o`, `--x`, `<-->`, `~~~`. **Never emit `-.-X`, `-.-x`, `-.-o`.**
+- Subgraphs: ≤ 3 levels.
+- Comments: `%% ...`.
 
-## 3. Styling
+## Styling
 
-Default: no custom styling. Omit `init`, `style`, `classDef`, `linkStyle`, and inline colors unless explicitly requested. Let the host theme control appearance.
+- Default: none. Omit `init`, `style`, `classDef`, `linkStyle`, inline colors. Host theme controls appearance.
+- If styling requested: ask light vs dark theme. Never convey meaning by color alone.
 
-If styling is requested, ask whether the target IDE uses a light or dark theme. Never convey meaning through color alone.
+## Output
 
-## 4. Validate
-
-Before output, verify:
-- Correct diagram type and direction.
-- Valid fences, node IDs, labels, and edge syntax.
-- Special characters are quoted; line breaks use `<br/>`.
-- No unnecessary styles, themes, or comments.
-
-## 5. Output
-
-Return one ` ```mermaid ` block containing only the diagram. Add at most one short caption outside it. Include no explanatory prose unless requested.
+Return exactly one ` ```mermaid ` block with only the diagram. At most one short caption outside. No prose unless requested.
