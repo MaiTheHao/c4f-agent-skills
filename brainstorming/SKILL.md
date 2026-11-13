@@ -1,150 +1,62 @@
 ---
 name: brainstorming
-description: Design before code. Use before any request that creates or changes code, behavior, interfaces, data, config, or architecture, even if the user says skip design.
+description: Design before code. Use before any request that creates or changes behavior, interfaces, data, config, or architecture and is not a trivial exact edit. Produces a validated design; Architectural designs are saved after approval.
 ---
 
 # Brainstorming
 
-Act as a senior technical partner. Produce a **validated design before implementation**. Prefer caution over speed. Skip ceremony only for trivial tasks.
+Act as a senior technical partner. Produce a **validated design before implementation**. Prefer caution over speed; skip ceremony only for trivial tasks. Reply in the user's language; keep keys and field names in English.
 
 ## Principles
 
-1. **Think first.** State assumptions. If several interpretations exist, list them; never pick silently. If unclear, ask. One question is cheaper than a wrong guess.
+1. **Think first.** State assumptions. If several interpretations exist, list them; never pick silently. If unclear, ask: one question is cheaper than a wrong guess.
 2. **Minimal.** No unrequested features, single-use abstractions, speculative config, or handling of impossible cases. Push back if a simpler approach exists. Treat the user's proposed solution as a hypothesis; check it fixes the root problem.
-3. **Surgical.** Touch only what the request needs; follow existing patterns. Report unrelated problems; do not fix them. Every changed line traces to the request.
-4. **Verifiable.** Turn the task into success criteria that can be checked, not "seems to work".
-5. **Evidence.** Claims about existing code cite `path:line` or command output. Unverified claims are tagged `[assumed]`.
+3. **Surgical.** Touch only what the request needs; follow existing patterns. Report unrelated problems; do not fix them.
+4. **Verifiable.** Turn the task into success criteria that can be checked, never "seems to work".
+5. **Evidence.** Claims about existing code cite `path:line` or command output. Tag every assumption: `[user]` (user said it), `[assumed]` (unverified), `[verified: path:line]`.
 
-## Human gate
+## Approval gate
 
-Nothing is implemented until the gate opens. Every ask to the user (clarification, approval, re-approval, skip-design warning) is a GRILL question: follow the rules at the end of this file.
+Nothing is implemented until the gate opens.
 
-- **Trivial:** an explicit, exact user request authorizes the small change; do not ask for a separate design approval. If the request is not exact, clarify only what changes the implementation.
-- **Bounded and Architectural:** present the design and wait for explicit approval before implementation.
-- **Before approval:** only read, search, run read-only commands, research, diagram, or write pseudocode. No implementation files, scaffolding, or dependency installs. Spike probes go in `/tmp` or `local/agents/scratch/`, are reported as throwaway, and are deleted.
-- **Gate opens** only on an unambiguous yes to the presented design ("approved", "proceed", "yes, go"). Questions, silence, or conditional replies ("looks good, but...") keep it closed while decisions remain open. An unanswered gate question never defaults to proceeding.
-- **Scope:** approval covers only what was presented. Any material change (new file, interface, data shape, dependency, dropped criterion) reopens the gate.
-- **Two gates:** the design gate is this skill's; the plan gate belongs to `writing-plans`. A design yes never opens the plan gate. Until the plan gate opens, nothing is implemented, delegated for editing, or run through `executing-plans`.
-- **User waives design:** "skip design" / "just do it" waives ceremony, never the gate.
-  - Bounded: show the 3-line design anyway, then ask once.
-  - Architectural: name the specific risk of skipping, present the design anyway, then ask once. Never skip Align and Design.
+- **Trivial:** an exact user request authorizes the change; no design approval. If the request is not exact, clarify only what changes the implementation.
+- **Bounded and Architectural:** present the design in chat and wait for explicit approval.
+- **Before approval:** only read, search, run read-only commands, research, diagram. No implementation files, scaffolding, or dependency installs. The design file is written only after approval. Spike probes go in `local/agents/scratch/` or `/tmp`, are reported as throwaway, and are deleted.
+- **Opens** only on an unambiguous yes ("approved", "proceed", "yes, go"). Questions, silence, or "looks good, but..." keep it closed. An unanswered gate question never defaults to proceeding.
+- **Scope:** approval covers only what was presented. A material change (new file, interface, data shape, dependency, dropped criterion) reopens the gate.
+- **User waives design** ("skip design", "just do it"): ceremony is waived, never the gate. Bounded: show a short design anyway, then ask once. Architectural: name the specific risk of skipping, present the design anyway, then ask once.
+
+Waivers, approval wording, and questioning rules: `references/approval-and-grill.md`.
 
 ## Workflow
 
-### 1. Classify
+State the path in your first line so the user can override. Size follows **impact** (behavior, interface, data, risk), not file or line counts. When in doubt, take the heavier path. Paths only upgrade.
 
-State the path in your first line so the user can override. When in doubt, take the heavier path. Paths only upgrade: on hidden complexity, stop, say so, step up. If the request spans independent subsystems, split and brainstorm one at a time.
+| Step           | What you do                                                                 | Detail                                    |
+| :------------- | :-------------------------------------------------------------------------- | :---------------------------------------- |
+| 1. Classify    | Choose Trivial / Spike / Bounded / Architectural; split independent systems | `references/classification-and-routing.md` |
+| 2. Inspect     | Read code, patterns, contracts, tests, config; record **Baseline**          | `references/design-method.md`             |
+| 3. Align       | State Goal / Non-goals / Constraints / Success criteria / Assumptions       | `references/design-method.md`             |
+| 4. Design      | Present one complete, concise design; compare real alternatives only        | `references/design-method.md`             |
+| 5. Verify plan | Map every success criterion to `command -> expected`                        | `references/design-method.md`             |
+| 6. Approve     | Resolve contradictions, then ask the gate question                          | `references/approval-and-grill.md`        |
 
-| Path              | Signals                                                                                                                                                                                                         | Output                                                   | Approve                                                            |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
-| **Trivial**       | 1 file, ≤~10 lines, no change to caller-visible behavior, interface, or data semantics; obvious check; bug cause already verified. Documentation or config edits qualify only when they do not change behavior. | One-line plan + verify check                             | The exact user request authorizes the change; no separate approval |
-| **Spike**         | "can we / how would we" feasibility; result is an answer, not kept code                                                                                                                                         | Question + probe plan, then findings (probe = throwaway) | The probe                                                          |
-| **Bounded**       | Scoped change to an existing flow; 2-5 files; no new shared interface                                                                                                                                           | Short chat design: approach, files, verification         | The design                                                         |
-| **Architectural** | New module/service, changed shared interface (2+ consumers), schema/persisted data, migration, auth/security, concurrency, cross-cutting concern, or 6+ files                                                   | Sectioned design with alternatives, then `writing-plans` | The design (plan approved inside `writing-plans`)                  |
+## Artifacts
 
-### 2. Inspect
+Only **Architectural** designs are saved, and only after approval; the design file is the only artifact written. Trivial, Spike, and Bounded stay in chat: no design file.
 
-Read relevant code, patterns, contracts, tests, config first. Never ask what the repo can answer. Research externally only if it materially affects the design.
+- Design: `local/agents/designs/YYYY-MM-DD-<feature-name>.md` (kebab-case)
+- Revision: `local/agents/designs/YYYY-MM-DD-<feature-name>-rev<N>.md`, containing only the sections that change
+- Spike scratch: `local/agents/scratch/`, deleted after the findings are reported
 
-- Bounded/Architectural: run relevant existing checks for the affected area and record the result as baseline. For non-behavioral documentation/config edits, state why tests do not apply and name the verification check.
-- Bugs: reproduce first, then find the root cause, not the symptom. If unreproducible, say so and tag the cause `[assumed]`.
-
-### 3. Align
-
-Write a short note; separate assumptions from user statements; invite correction.
-
-```
-Goal / Non-goals / Constraints
-Success criteria: (each verifiable)
-Assumptions: (tag [user] / [assumed] / [verified: path:line])
-```
-
-Clarify through the gate: GRILL questions only, one at a time, max 3 blocking per round. Assume and tag non-critical gaps; do not interview.
-
-### 4. Design
-
-Use the shape for the chosen path; drop sections that do not apply.
-
-**Bounded** (and the waiver flow):
-
-```
-Approach: ...
-Files: ...
-Verify: ...
-```
-
-**Architectural:**
-
-```
-Scope / Non-goals
-Components + interfaces (exact names and signatures)
-Data model / main flow
-Failure handling / rollback
-Decisions (chosen | rejected | why)
-Verify plan
-```
-
-**Trivial:** one-line plan + verify check.
-
-- Compare 2-3 materially different approaches only if they truly exist. Lead with the recommendation and say when another wins. Never invent alternatives.
-- Cut anything the success criteria do not require.
-- Units: one purpose each, clear interface, independently testable.
-- Challenge only what affects correctness, security, performance, data integrity, compatibility, or operations: why is the assumption valid, what if it is wrong?
-- Failure handling: name concrete cases (invalid input, partial failure) and how to undo irreversible or data-touching changes.
-- Architectural only: exact names and signatures (types in/out) for every cross-unit interface; keep a decision log `Decision | Chosen | Rejected | Why`; do not write a spec file. Present one complete, concise design for approval instead of requiring section-by-section confirmation, unless a specific unresolved decision needs its own checkpoint.
-
-### 5. Verify plan
-
-End every design with:
-
-```
-1. [Step] → verify: [command + expected result]
-Done when: every success criterion maps to at least one check.
-```
-
-Prefer tests: "add validation" → tests for invalid inputs, then pass them; "fix bug" → failing reproducing test, then pass it.
-
-### 6. Approve
-
-Confirm no contradictions, TBDs, or two-way readings; resolve them first. Then open the gate with a GRILL question: "Approve this design, or what should change?" Recommendation: approve. Default if unanswered: stay blocked. Never ask while critical ambiguity remains.
+File rules and the design template: `references/design-artifact-template.md`.
 
 ## After approval
 
 The approved design is the contract; never change it silently.
 
-- **Spike:** report recommendation, delete the probe.
-- **Bounded:** implement test-first within listed files only, run each verify check, report evidence.
-- **Architectural:** emit the handoff block below and invoke `writing-plans` in the same turn as the design approval; after the user approves the plan, use `executing-plans`. Do not insert another skill between the approved design and `writing-plans`. NEVER go from design approval to implementation or `executing-plans` directly, and never approve the plan yourself.
+- **Spike:** report the recommendation, delete the probe.
+- **Bounded:** no file. Implement test-first within the listed files only, run each verify check, report evidence in chat.
+- **Architectural:** save the design as above, reply with the path, then invoke `writing-plans` with it. Never go from design approval straight to implementation.
 
-If implementation reveals a new constraint or contradiction: stop, explain, name the affected decision, propose the change, re-approve if material. Minor details need none.
-
-### Handoff block (Architectural; sole input to `writing-plans`)
-
-```
-Approved Design: <name>
-Goal / Non-goals / Constraints
-Success criteria
-Assumptions (tagged)
-Components + interfaces (exact signatures)
-Decisions (chosen vs rejected, why)
-Risks + rollback
-Baseline: <test command> -> <result before change>
-```
-
-## GRILL rules
-
-Ask only when the answer can materially change the design and the repo or available context cannot resolve it. State the decision and why it matters. If there is a clear recommendation, give it. When the user may not answer immediately, state the safe assumption or explain that work is blocked without the answer.
-
-Ask one decision at a time when choices are independent. Include meaningful trade-offs when the options have different costs or benefits; do not invent trade-offs for a straightforward clarification. Use the shortest format that makes the decision clear.
-
-For approval or re-approval, present the concrete design and ask whether to approve it or what should change. Silence is not approval. If approval is required and absent, pause work that depends on it.
-
-| Condition                                        | Action                                                                                |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Unsure between two paths                         | Take the heavier                                                                      |
-| Hidden complexity mid-work                       | Stop, say so, upgrade path                                                            |
-| Independent subsystems                           | Split, one at a time                                                                  |
-| Ambiguous/conditional reply                      | Not approval; resolve open decisions                                                  |
-| Material change after approval                   | Re-approve first                                                                      |
-| Architectural design approved, plan not approved | Invoke `writing-plans`; implementation stays blocked until the user approves the plan |
-| Bug cause unverified                             | Reproduce first; no fix design yet                                                    |
+If implementation reveals a new constraint or contradiction, stop, explain, name the affected decision, propose the change, and re-approve if material (Architectural: save a `-rev<N>`). Minor details need none.

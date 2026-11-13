@@ -1,9 +1,9 @@
-The builder parses `Goal`, `AffectedFiles`, `TaskUnits`, `Spec`, `Tests`, `Verify`, `Acceptance`, `Done`, and the unit fields `Files`, `DependsOn`, `Consumes`, `Produces`. Never rename or omit them.
-`Spec` holds decisions only. Never put code in any field.
+# Plan Template
 
+Keep section and field names exactly. Never put code in any field.
+
+````markdown
 # [Feature Name] Plan
-
-**Status:** APPROVED (YYYY-MM-DD) | **Design:** [path or "inline in chat"]
 
 ## Goal
 
@@ -24,14 +24,6 @@ graph TD
 
 - [Assumptions carried from the design]
 - Baseline: `command` -> [result before any change, including known failures]
-
-## Needs Your Attention
-
-- [Max 3 one-liners: breaking change, irreversible step, or decision to double-check. Or "None"]
-
-## Open Questions
-
-None
 
 ## AffectedFiles
 
@@ -60,13 +52,13 @@ None
 - **Tests:** (test-first, max 5)
   - `testName`: [input] -> [expected] (RF1)
 - **Verify:** `command` -> [expected]
-- [ ] **Done**
 
 ## Acceptance
 
-- [ ] AC1: [observable criterion] (verified by U1)
-- [ ] ACn: full regression `baseline command` -> matches Baseline except intended changes (verified by U<last>)
+- AC1: [observable criterion] (verified by U1)
+- ACn: full regression `baseline command` -> matches Baseline except intended changes (verified by U<last>)
 
 ## Risks
 
 - [Real risk and mitigation. Unrelated issues noticed, as notes only.]
+````

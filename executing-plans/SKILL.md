@@ -1,98 +1,33 @@
 ---
 name: executing-plans
-description: Use when the user asks to run, resume, or continue an approved plan.
+description: Use when the user asks to run, resume, or continue a plan written with writing-plans. Executes units test-first, proves each with its Verify command, and records a walkthrough.
 ---
 
 # Executing Plans
 
-The approved plan is the execution contract. Only an explicitly approved plan authorizes execution.
+The plan is the execution contract. The user's request to execute a named plan is the authorization. The plan file is never edited; progress and deviations go in the walkthrough. Reply and write the walkthrough in the user's language; keep keys in English.
 
-## 1. Preflight
+## Core flow
 
-1. Locate the plan in `local/agents/plans/`. If multiple plans match, ask which one.
-2. Require `Status: APPROVED`, `Open Questions: None`, and no unresolved `TODO`/`TBD`. Otherwise stop and return to `writing-plans`.
-3. Verify prerequisites and environment. Do not install or upgrade unlisted dependencies.
-4. Run and record the baseline command. Treat existing failures as pre-existing; do not fix them.
-5. Validate every `MODIFY`/`DELETE` anchor. Minor line shifts with unchanged symbols are acceptable; missing, renamed, or semantically changed symbols require stopping.
-6. Record unrelated working-tree changes and preserve them.
+1. **Preflight.** Locate the plan, validate it, verify prerequisites, record **Baseline**, run the anchor check, and create the walkthrough with every unit pending. Details: `references/preflight-and-resume.md`.
+2. **Execute** units in `DependsOn` order, then ID order. Test-first per unit, minimum change, then the unit's `Verify`. Details: `references/unit-execution.md`.
+3. **Stop** on ambiguity, anchor drift, scope escape, an unrunnable check, or the same failure after 3 fix attempts. Report the blocker and wait. Details: `references/stop-recovery-and-completion.md`.
+4. **Complete.** Run the full regression from `Acceptance`, verify every Acceptance item and Review Focus test, finish the walkthrough. Details: `references/stop-recovery-and-completion.md`.
 
-**Resume:** Find the first unchecked step and re-run the last completed unit's `Verify` before continuing.
+## Hard constraints
 
-## 2. Execution
+- **Evidence:** never claim completion without real command output or observed runtime behavior.
+- **Tests:** never weaken assertions, skip tests, suppress errors, add dummy fallbacks, or edit a test to force a pass.
+- **Scope:** touch only the current unit's `Files` and nothing in `Out of Scope`. Stop if more files are needed.
+- **Rules:** obey the plan's `Rules` section (version floors, no new deps, naming).
+- **Side effects:** unless the plan or user says so, do not install dependencies, commit, push, reset, delete out-of-scope files, or run migrations or destructive commands against non-local environments.
+- **Irreversible steps:** run only with the rollback noted in `Risks` or an explicit user go-ahead.
+- **Secrets:** never expose them in logs or the walkthrough.
 
-- Execute units in dependency order and ID order. Parallelize only when supported and file scopes are disjoint.
-- Before each unit, state the key assumption in one line. If ambiguous or inconsistent with the code, stop and clarify.
-- For each testable step: write a failing test, confirm it fails for the expected reason, implement the minimum change, then confirm PASS.
-- For `(no-test)` steps, apply the change and run the specified verification.
-- Follow the unit's `Files` and existing code style. Remove only artifacts orphaned by your changes; leave unrelated dead code untouched.
-- Run every unit's `Verify` command. On failure, inspect full logs, fix the root cause, and rerun verification.
-- After 3 failed fix attempts for the same failure, stop and report attempts, logs, and the likely cause.
-- Check off a step only after its verification evidence exists.
+## Resume
 
-## 3. Hard Constraints
+Read the walkthrough's `Progress`, re-run the last completed unit's `Verify`, then continue from the next unit. If the walkthrough is missing, restart at preflight.
 
-- **Evidence:** Never claim completion without actual command output or observed runtime behavior. Verify every acceptance criterion.
-- **Tests:** Never weaken assertions, skip tests, suppress errors, add dummy fallbacks, or change tests to force a pass. Modify tests only when explicitly required by the plan.
-- **Scope:** Do not modify files outside the current unit's `Files`. Stop if additional files are required.
-- **Plan edits:** Without approval, modify the plan only to check completed boxes and append a dated `## Deviation Log` entry.
-- **Side effects:** Unless explicitly specified by the plan or requested by the user, do not install dependencies, commit, push, reset, force-push, delete out-of-scope files, or run migrations/destructive commands against non-local environments.
-- **Secrets:** Never expose secrets in logs or walkthroughs.
-- **Deviations:** If a blocker, scope deviation, or design contradiction arises, stop, document the affected decision, update the plan as permitted, and obtain approval before proceeding. Return to `brainstorming` if the design itself must change.
+## Walkthrough
 
-## 4. Stop Conditions
-
-Stop and report when:
-- The plan is unapproved, incomplete, ambiguous, or conflicts with the code.
-- Anchor drift is material or a required file falls outside the unit scope.
-- A verification command is invalid or unrunnable. Report its exact error; do not silently substitute a weaker check.
-- The same failure persists after 3 fix attempts.
-- Baseline failures overlap modified files and prevent reliable attribution.
-- An irreversible action lacks rollback or explicit approval.
-
-## 5. Completion
-
-After all units pass:
-1. Run the full regression command.
-2. Verify every acceptance criterion with concrete evidence.
-3. Save the walkthrough at `local/agents/walkthroughs/` using the exact plan filename.
-4. Include relevant pre-existing failures and unrelated issues without fixing them.
-
-Create the walkthrough directory if needed. Use repository-relative paths.
-
-## 6. Walkthrough Template
-
-Save as Markdown using the same filename as the plan.
-
-# [Feature Name] Walkthrough
-
-## Summary
-[Goal and outcome]
-
-## Changes Made
-| File | Status | Description |
-|---|---|---|
-| `path/to/file` | CREATED / MODIFIED / DELETED | [Change] |
-
-## Verification Evidence
-Record each command actually executed, relevant output, and exit status.
-
-```bash
-# Actual command and relevant output
-```
-
-## Baseline vs Final
-- Baseline: [Result]
-- Final regression: [Result]
-- Pre-existing failures: [List or None]
-
-## Key Decisions & Notes
-- [Edge cases, constraints, anchor drift]
-
-## Deviations
-- [Deviation log entries or None]
-
-## Out-of-Scope Observations
-- [Unrelated findings or None]
-
-## Acceptance Checklist
-- [x] [Criterion and evidence]
+Path: `local/agents/walkthroughs/<same filename as the plan>`. Template: `references/walkthrough-template.md`.
